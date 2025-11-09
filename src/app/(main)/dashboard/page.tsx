@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { inventoryService } from "@/lib/data";
-import { Block, Sector, Room, Asset } from "@/lib/types";
+import { Block, Sector, Room, Asset, UserProfile } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
@@ -21,10 +22,15 @@ type Stats = {
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({ assetCount: 0, roomCount: 0, sectorCount: 0 });
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     setStats(inventoryService.getStats());
     setBlocks(inventoryService.getAll("blocks") as Block[]);
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
   }, []);
 
   const getSectorsForBlock = (blockId: string) => {
@@ -39,7 +45,9 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Início (Dashboard)</h1>
+      <h1 className="text-3xl font-bold tracking-tight">
+        {user ? `Olá, ${user.name}!` : "Início (Dashboard)"}
+      </h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>

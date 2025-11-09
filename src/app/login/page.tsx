@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -25,6 +26,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const performLogin = () => {
+     if (typeof window !== "undefined") {
+        const user = { name: "Administrador", email: "admin@univag.com.br", role: "Admin" };
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("user", JSON.stringify(user));
+        // Dispara um evento para notificar outras abas/janelas e o próprio layout
+        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
+        router.replace("/dashboard");
+      }
+  }
+
   const handleLogin = () => {
     setError(null);
 
@@ -39,23 +51,14 @@ export default function LoginPage() {
     }
 
     if (email.toLowerCase() === "admin@univag.com.br" && password === "123456") {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("isLoggedIn", "true");
-        // Dispara um evento para notificar outras abas/janelas e o próprio layout
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
-        router.replace("/dashboard");
-      }
+      performLogin();
     } else {
       setError("E-mail ou senha incorreta.");
     }
   };
 
   const handleBypassLogin = () => {
-    if (typeof window !== "undefined") {
-        localStorage.setItem("isLoggedIn", "true");
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
-        router.replace("/dashboard");
-    }
+    performLogin();
   }
 
   return (
@@ -72,7 +75,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl">KeepInventory</CardTitle>
           <CardDescription>
-            Sistema de Gestão Patrimonial (SGP)
+            KeepInventory - Sistema de Gestão Patrimonial (SGP)
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
