@@ -40,12 +40,7 @@ export default function MainLayout({
 
     // Adiciona um listener para o evento 'storage' que é disparado da página de login
     const handleStorageChange = (event: StorageEvent) => {
-        // Quando o evento é de outra aba, o `key` existe
         if (event.key === "isLoggedIn") {
-            checkAuth();
-        }
-        // Quando o evento é disparado na mesma aba, o `key` é nulo
-        if (event.key === null) {
             checkAuth();
         }
     };
@@ -81,8 +76,7 @@ export default function MainLayout({
   }
 
   if (!isAuthenticated) {
-    // Este caso teoricamente não deve acontecer por causa do router.replace,
-    // mas é uma segurança adicional.
+    // Não renderiza nada enquanto redireciona
     return null;
   }
 

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  redirect('/login');
-  return null;
+  // Redireciona para o dashboard que está dentro do grupo (main)
+  redirect('/dashboard');
 }

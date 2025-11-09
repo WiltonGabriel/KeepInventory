@@ -41,8 +41,8 @@ export default function LoginPage() {
     if (email.toLowerCase() === "admin@univag.com.br" && password === "123456") {
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
-        // Dispara um evento para notificar outras abas/janelas
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn' }));
+        // Dispara um evento para notificar outras abas/janelas e o próprio layout
+        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
         router.replace("/");
       }
     } else {
@@ -53,13 +53,13 @@ export default function LoginPage() {
   const handleBypassLogin = () => {
     if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn' }));
+        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
         router.replace("/");
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-primary">
       <Card className="w-full max-w-sm relative">
         <button 
             onClick={handleBypassLogin}
