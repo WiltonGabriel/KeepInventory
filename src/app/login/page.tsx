@@ -26,22 +26,24 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = () => {
-    setError(null); // Limpa erros anteriores
+    setError(null);
 
     if (!email || !password) {
-      setError("Por favor, preencha o e-mail e a senha.");
+      setError("Por favor, preencha o e-mail e a senha corretamente.");
       return;
     }
     
-    if (password.length < 1) {
-        setError("Você esqueceu de preencher a senha.");
+    if (password.length < 6) {
+        setError("A senha deve ter pelo menos 6 caracteres.");
         return;
     }
 
     if (email.toLowerCase() === "admin@univag.com.br" && password === "123456") {
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
-        router.push("/");
+        // Dispara um evento para notificar outras abas/janelas
+        window.dispatchEvent(new Event("storage"));
+        router.replace("/");
       }
     } else {
       setError("E-mail ou senha incorreta.");
@@ -49,7 +51,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-primary">
+    <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
@@ -78,6 +80,7 @@ export default function LoginPage() {
               placeholder="admin@univag.com.br"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             />
           </div>
           <div className="grid gap-2">
@@ -88,6 +91,7 @@ export default function LoginPage() {
               placeholder="••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             />
           </div>
         </CardContent>

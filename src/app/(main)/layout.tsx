@@ -21,28 +21,37 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Função para verificar o status de login
     const checkAuth = () => {
       const loggedIn = localStorage.getItem("isLoggedIn") === "true";
       if (loggedIn) {
         inventoryService.initialize();
         setIsAuthenticated(true);
       } else {
+        setIsAuthenticated(false);
         router.replace("/login");
       }
     };
+
     checkAuth();
 
+    // Adiciona um listener para o evento 'storage' que é disparado da página de login
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "isLoggedIn") {
-        checkAuth();
-      }
+        // Quando o evento é de outra aba, o `key` existe
+        if (event.key === "isLoggedIn") {
+            checkAuth();
+        }
+        // Quando o evento é disparado na mesma aba, o `key` é nulo
+        if (event.key === null) {
+            checkAuth();
+        }
     };
 
     window.addEventListener('storage', handleStorageChange);
+
     return () => {
         window.removeEventListener('storage', handleStorageChange);
     };
@@ -69,6 +78,12 @@ export default function MainLayout({
         `}</style>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    // Este caso teoricamente não deve acontecer por causa do router.replace,
+    // mas é uma segurança adicional.
+    return null;
   }
 
   return (
