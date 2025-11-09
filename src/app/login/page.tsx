@@ -43,7 +43,7 @@ export default function LoginPage() {
         localStorage.setItem("isLoggedIn", "true");
         // Dispara um evento para notificar outras abas/janelas e o próprio layout
         window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
-        router.replace("/");
+        router.replace("/dashboard");
       }
     } else {
       setError("E-mail ou senha incorreta.");
@@ -54,7 +54,7 @@ export default function LoginPage() {
     if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
         window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
-        router.replace("/");
+        router.replace("/dashboard");
     }
   }
 
@@ -70,9 +70,9 @@ export default function LoginPage() {
           <div className="flex justify-center items-center mb-4">
              <Building className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">AssetWise Inventory</CardTitle>
+          <CardTitle className="text-2xl">KeepInventory</CardTitle>
           <CardDescription>
-            Faça login para gerenciar seu inventário
+            Sistema de Gestão Patrimonial (SGP)
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">

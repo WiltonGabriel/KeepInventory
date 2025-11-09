@@ -86,7 +86,7 @@ export default function MainLayout({
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Building className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-lg">AssetWise</span>
+            <span className="font-semibold text-lg">KeepInventory</span>
           </div>
         </SidebarHeader>
         <SidebarContent>

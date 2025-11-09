@@ -4,8 +4,8 @@ import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'AssetWise Inventory',
-  description: 'Hierarchical inventory management system',
+  title: 'KeepInventory',
+  description: 'KeepInventory - Sistema de Gestão Patrimonial (SGP)',
 };
 
 export default function RootLayout({

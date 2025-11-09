@@ -53,13 +53,24 @@ const seedData = () => {
   ];
   saveToStorage(KEYS.ROOMS, rooms);
 
-  const assets: Asset[] = [
-    { id: 'PAT-TI-101-001', name: 'Cadeira Gamer', roomId: 'room-101' },
-    { id: 'PAT-TI-101-002', name: 'Monitor Ultrawide', roomId: 'room-101' },
-    { id: 'PAT-TI-102-001', name: 'Servidor Dell', roomId: 'room-102' },
-    { id: 'PAT-RH-103-001', name: 'Impressora a Laser', roomId: 'room-103' },
-    { id: 'PAT-ACAD-201-001', name: 'Projetor Epson', roomId: 'room-201' },
-  ];
+  let assets: Asset[] = [];
+  const addAsset = (name: string, roomId: string) => {
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+    const sector = sectors.find(s => s.id === room.sectorId);
+    if (!sector) return;
+    const assetsInRoom = assets.filter(a => a.roomId === roomId);
+    const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
+    const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
+    assets.push({ id: newId, name, roomId });
+  }
+
+  addAsset('Cadeira Gamer', 'room-101');
+  addAsset('Monitor Ultrawide', 'room-101');
+  addAsset('Servidor Dell', 'room-102');
+  addAsset('Impressora a Laser', 'room-103');
+  addAsset('Projetor Epson', 'room-201');
+
   saveToStorage(KEYS.ASSETS, assets);
 };
 
@@ -88,7 +99,7 @@ export const inventoryService = {
       const sector = inventoryService.getById('sectors', room.sectorId) as Sector;
       const assetsInRoom = inventoryService.getAssetsByRoomId(room.id);
       const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
-      const newId = `PAT-${sector.abbreviation}-${room.name.replace(/\D/g, '')}-${newAssetNumber}`;
+      const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
       newItem = { ...item, id: newId } as Asset;
     } else {
        newItem = { ...item, id: generateId(entityType.slice(0, -1)) } as Entity;
