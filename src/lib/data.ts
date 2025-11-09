@@ -28,28 +28,59 @@ const generateId = (prefix: string): string => {
 // --- Seed Data ---
 const seedData = () => {
   const blocks: Block[] = [
-    { id: 'block-a', name: 'Bloco A' },
-    { id: 'block-b', name: 'Bloco B' },
-    { id: 'block-c', name: 'Bloco C' },
+    { id: 'block-a', name: 'Bloco A - Administrativo' },
+    { id: 'block-b', name: 'Bloco B - Acadêmico' },
+    { id: 'block-c', name: 'Bloco C - Laboratórios' },
+    { id: 'block-d', name: 'Bloco D - Acadêmico' },
   ];
   saveToStorage(KEYS.BLOCKS, blocks);
 
   const sectors: Sector[] = [
+    // Bloco A - Administrativo
     { id: 'sector-ti', name: 'Tecnologia da Informação', abbreviation: 'TI', blockId: 'block-a' },
     { id: 'sector-rh', name: 'Recursos Humanos', abbreviation: 'RH', blockId: 'block-a' },
-    { id: 'sector-acad', name: 'Acadêmico', abbreviation: 'ACAD', blockId: 'block-b' },
-    { id: 'sector-fin', name: 'Financeiro', abbreviation: 'FIN', blockId: 'block-c' },
-    { id: 'sector-mkt', name: 'Marketing', abbreviation: 'MKT', blockId: 'block-b' },
+    { id: 'sector-fin', name: 'Financeiro', abbreviation: 'FIN', blockId: 'block-a' },
+    { id: 'sector-mkt', name: 'Marketing', abbreviation: 'MKT', blockId: 'block-a' },
+
+    // Bloco B - Acadêmico
+    { id: 'sector-humanas', name: 'Ciências Humanas', abbreviation: 'HUM', blockId: 'block-b' },
+    { id: 'sector-exatas', name: 'Ciências Exatas', abbreviation: 'EXA', blockId: 'block-b' },
+
+    // Bloco C - Laboratórios
+    { id: 'sector-labinfo', name: 'Laboratórios de Informática', abbreviation: 'LINFO', blockId: 'block-c' },
+    { id: 'sector-labsaude', name: 'Laboratórios de Saúde', abbreviation: 'LSAU', blockId: 'block-c' },
+
+    // Bloco D - Acadêmico
+    { id: 'sector-saude', name: 'Ciências da Saúde', abbreviation: 'SAU', blockId: 'block-d' },
+    { id: 'sector-sociais', name: 'Ciências Sociais', abbreviation: 'SOC', blockId: 'block-d' },
   ];
   saveToStorage(KEYS.SECTORS, sectors);
 
   const rooms: Room[] = [
-    { id: 'room-101', name: 'Sala 101', sectorId: 'sector-ti' },
-    { id: 'room-102', name: 'Sala 102', sectorId: 'sector-ti' },
-    { id: 'room-103', name: 'Sala 103', sectorId: 'sector-rh' },
-    { id: 'room-201', name: 'Sala 201', sectorId: 'sector-acad' },
-    { id: 'room-202', name: 'Sala 202', sectorId: 'sector-mkt' },
-    { id: 'room-301', name: 'Sala 301', sectorId: 'sector-fin' },
+    // Bloco A
+    { id: 'room-a101', name: 'Sala 101', sectorId: 'sector-ti' },
+    { id: 'room-a102', name: 'Sala 102', sectorId: 'sector-ti' },
+    { id: 'room-a103', name: 'Sala 103', sectorId: 'sector-rh' },
+    { id: 'room-a104', name: 'Sala 104', sectorId: 'sector-fin' },
+    { id: 'room-a105', name: 'Sala 105', sectorId: 'sector-mkt' },
+
+    // Bloco B
+    { id: 'room-b101', name: 'Sala B101', sectorId: 'sector-humanas' },
+    { id: 'room-b102', name: 'Sala B102', sectorId: 'sector-humanas' },
+    { id: 'room-b201', name: 'Sala B201', sectorId: 'sector-exatas' },
+    { id: 'room-b202', name: 'Sala B202', sectorId: 'sector-exatas' },
+    
+    // Bloco C
+    { id: 'room-c101', name: 'Lab Infor 01', sectorId: 'sector-labinfo' },
+    { id: 'room-c102', name: 'Lab Infor 02', sectorId: 'sector-labinfo' },
+    { id: 'room-c201', name: 'Lab Anatomia', sectorId: 'sector-labsaude' },
+    { id: 'room-c202', name: 'Lab Química', sectorId: 'sector-labsaude' },
+
+    // Bloco D
+    { id: 'room-d101', name: 'Sala D101', sectorId: 'sector-saude' },
+    { id: 'room-d102', name: 'Sala D102', sectorId: 'sector-saude' },
+    { id: 'room-d201', name: 'Sala D201', sectorId: 'sector-sociais' },
+    { id: 'room-d202', name: 'Sala D202', sectorId: 'sector-sociais' },
   ];
   saveToStorage(KEYS.ROOMS, rooms);
 
@@ -61,15 +92,22 @@ const seedData = () => {
     if (!sector) return;
     const assetsInRoom = assets.filter(a => a.roomId === roomId);
     const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
+    //PAT<SIGLA_SETOR><NUMERO_SALA><SEQUENCIAL>
     const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
     assets.push({ id: newId, name, roomId });
   }
 
-  addAsset('Cadeira Gamer', 'room-101');
-  addAsset('Monitor Ultrawide', 'room-101');
-  addAsset('Servidor Dell', 'room-102');
-  addAsset('Impressora a Laser', 'room-103');
-  addAsset('Projetor Epson', 'room-201');
+  // Assets no Bloco A (Administrativo)
+  addAsset('Cadeira de Escritório', 'room-a101');
+  addAsset('Monitor Dell 24"', 'room-a101');
+  addAsset('Servidor de Rede', 'room-a102');
+  addAsset('Impressora Multifuncional', 'room-a103');
+  
+  // Assets no Bloco C (Laboratórios)
+  addAsset('Computador i7 16GB RAM', 'room-c101');
+  addAsset('Projetor Epson PowerLite', 'room-c101');
+  addAsset('Esqueleto Humano', 'room-c201');
+  addAsset('Microscópio Óptico', 'room-c202');
 
   saveToStorage(KEYS.ASSETS, assets);
 };
@@ -95,7 +133,8 @@ export const inventoryService = {
     const items = getFromStorage<Entity>(KEYS[entityType.toUpperCase() as keyof typeof KEYS]);
     let newItem: Entity;
     if (entityType === 'assets') {
-      const room = inventoryService.getById('rooms', (item as Asset).roomId) as Room;
+      const assetData = item as Omit<Asset, 'id'>;
+      const room = inventoryService.getById('rooms', assetData.roomId) as Room;
       const sector = inventoryService.getById('sectors', room.sectorId) as Sector;
       const assetsInRoom = inventoryService.getAssetsByRoomId(room.id);
       const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
