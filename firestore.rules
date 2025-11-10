@@ -1,0 +1,99 @@
+/**
+ * @fileoverview Firestore Security Rules for the inventory system.
+ *
+ * Core Philosophy:
+ * This ruleset allows read and write access to any authenticated user. Since the application does not specify user-specific data or roles, the rules are open to all authenticated users.
+ *
+ * Data Structure:
+ * The data is organized into four top-level collections: /blocks/{blockId}, /sectors/{sectorId}, /rooms/{roomId}, and /assets/{assetId}. There are no nested collections.
+ *
+ * Key Security Decisions:
+ * - All authenticated users can read and write to all collections.
+ * - There are no specific authorization requirements outlined besides basic authentication, so more granular access control is not implemented.
+ * - No denormalization for authorization independence is required.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Grants read and write access to any authenticated user for blocks.
+     * @path /blocks/{blockId}
+     * @allow (create, update, delete) - Any authenticated user can create, update, or delete a block.
+     *   Example: request.auth.uid != null
+     * @allow (get, list) - Any authenticated user can read a block.
+     *   Example: request.auth.uid != null
+     * @deny (create, update, delete) - An unauthenticated user attempts to create a block.
+     *   Example: request.auth.uid == null
+     * @principle Allows any authenticated user to read and write block data.
+     */
+    match /blocks/{blockId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for sectors.
+     * @path /sectors/{sectorId}
+     * @allow (create, update, delete) - Any authenticated user can create, update, or delete a sector.
+     *   Example: request.auth.uid != null
+     * @allow (get, list) - Any authenticated user can read a sector.
+     *   Example: request.auth.uid != null
+     * @deny (create, update, delete) - An unauthenticated user attempts to create a sector.
+     *   Example: request.auth.uid == null
+     * @principle Allows any authenticated user to read and write sector data.
+     */
+    match /sectors/{sectorId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for rooms.
+     * @path /rooms/{roomId}
+     * @allow (create, update, delete) - Any authenticated user can create, update, or delete a room.
+     *   Example: request.auth.uid != null
+     * @allow (get, list) - Any authenticated user can read a room.
+     *   Example: request.auth.uid != null
+     * @deny (create, update, delete) - An unauthenticated user attempts to create a room.
+     *   Example: request.auth.uid == null
+     * @principle Allows any authenticated user to read and write room data.
+     */
+    match /rooms/{roomId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for assets.
+     * @path /assets/{assetId}
+     * @allow (create, update, delete) - Any authenticated user can create, update, or delete an asset.
+     *   Example: request.auth.uid != null
+     * @allow (get, list) - Any authenticated user can read an asset.
+     *   Example: request.auth.uid != null
+     * @deny (create, update, delete) - An unauthenticated user attempts to create an asset.
+     *   Example: request.auth.uid == null
+     * @principle Allows any authenticated user to read and write asset data.
+     */
+    match /assets/{assetId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}

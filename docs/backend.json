@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "Block": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Block",
+      "type": "object",
+      "description": "Represents a physical block or building within the inventory system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Block entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the block."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Sector": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sector",
+      "type": "object",
+      "description": "Represents a sector or department within a block.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Sector entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the sector."
+        },
+        "blockId": {
+          "type": "string",
+          "description": "Reference to Block. (Relationship: Block 1:N Sector)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "blockId"
+      ]
+    },
+    "Room": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Room",
+      "type": "object",
+      "description": "Represents a room within a sector.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Room entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the room."
+        },
+        "sectorId": {
+          "type": "string",
+          "description": "Reference to Sector. (Relationship: Sector 1:N Room)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sectorId"
+      ]
+    },
+    "Asset": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Asset",
+      "type": "object",
+      "description": "Represents an asset or item within a room.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Asset entity. This should be an alphanumeric ID reflecting the asset's location."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the asset."
+        },
+        "salaId": {
+          "type": "string",
+          "description": "Reference to Room. (Relationship: Room 1:N Asset)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "salaId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/blocks/{blockId}",
+        "definition": {
+          "entityName": "Block",
+          "schema": {
+            "$ref": "#/backend/entities/Block"
+          },
+          "description": "Stores block data. The 'blockId' is a unique identifier for each block.",
+          "params": [
+            {
+              "name": "blockId",
+              "description": "Unique identifier for the block."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sectors/{sectorId}",
+        "definition": {
+          "entityName": "Sector",
+          "schema": {
+            "$ref": "#/backend/entities/Sector"
+          },
+          "description": "Stores sector data. The 'sectorId' is a unique identifier for each sector.",
+          "params": [
+            {
+              "name": "sectorId",
+              "description": "Unique identifier for the sector."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/rooms/{roomId}",
+        "definition": {
+          "entityName": "Room",
+          "schema": {
+            "$ref": "#/backend/entities/Room"
+          },
+          "description": "Stores room data. The 'roomId' is a unique identifier for each room.",
+          "params": [
+            {
+              "name": "roomId",
+              "description": "Unique identifier for the room."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/assets/{assetId}",
+        "definition": {
+          "entityName": "Asset",
+          "schema": {
+            "$ref": "#/backend/entities/Asset"
+          },
+          "description": "Stores asset data. The 'assetId' is a unique identifier for each asset.",
+          "params": [
+            {
+              "name": "assetId",
+              "description": "Unique identifier for the asset."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to mirror the hierarchical nature of the inventory system (Blocks > Sectors > Rooms > Assets). Each entity is stored in its own top-level collection for simplicity and scalability. This design avoids nested collections, which can complicate querying and security rules. Security will rely on standard Firebase Authentication. Since there are no specific authorization requirements outlined besides basic authentication (no roles, groups, or shared access), path-based rules centered around the authenticated user's ID are sufficient. The design does not include user-specific data or access restrictions. Therefore, denormalization for authorization independence is not required in this scenario. This structure supports the QAPs because each collection represents a distinct entity type with homogeneous security requirements (Structural Segregation)."
+  }
+}
