@@ -21,7 +21,8 @@ service cloud.firestore {
     }
 
     match /patrimonios/{patrimonioId} {
-      allow read, write: if isSignedIn();
+      allow read, update, delete: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.name is string;
     }
 
     match /movimentacoes/{movimentacaoId} {
