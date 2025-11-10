@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Página de Login independente que inicializa seu próprio Firebase Auth.
@@ -58,7 +57,6 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6">
         <div className="flex items-center gap-2 text-center">
-            <Building className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">KeepInventory</h1>
         </div>
         <Card className="w-full">
