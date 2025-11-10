@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Asset, Room, Sector, Block, AssetStatus, Movement } from "@/lib/types";
+import { Asset, Room, Sector, Block, AssetStatus } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,11 @@ export default function AssetsPage() {
   const roomsCollection = useMemoFirebase(() => firestore ? collection(firestore, "rooms") : null, [firestore]);
   const sectorsCollection = useMemoFirebase(() => firestore ? collection(firestore, "sectors") : null, [firestore]);
   const blocksCollection = useMemoFirebase(() => firestore ? collection(firestore, "blocks") : null, [firestore]);
-  const movementsCollection = useMemoFirebase(() => firestore ? collection(firestore, "movements") : null, [firestore]);
 
   const { data: assets, isLoading: isLoadingAssets } = useCollection<Asset>(assetsCollection);
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
   const { data: sectors, isLoading: isLoadingSectors } = useCollection<Sector>(sectorsCollection);
   const { data: blocks, isLoading: isLoadingBlocks } = useCollection<Block>(blocksCollection);
-  const { data: movements, isLoading: isLoadingMovements } = useCollection<Movement>(movementsCollection);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -222,7 +220,7 @@ export default function AssetsPage() {
     }
   };
 
-  const isLoading = isLoadingAssets || isLoadingRooms || isLoadingSectors || isLoadingBlocks || isLoadingMovements;
+  const isLoading = isLoadingAssets || isLoadingRooms || isLoadingSectors || isLoadingBlocks;
 
   const columns = [
     {
@@ -314,7 +312,7 @@ export default function AssetsPage() {
       </Dialog>
       
       {historyAsset && (
-        <HistoryLog asset={historyAsset} movements={movements || []} open={!!historyAsset} onOpenChange={(open) => !open && setHistoryAsset(null)} />
+        <HistoryLog asset={historyAsset} open={!!historyAsset} onOpenChange={(open) => !open && setHistoryAsset(null)} />
       )}
 
       <DataTable

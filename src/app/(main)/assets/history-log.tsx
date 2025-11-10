@@ -15,23 +15,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Edit3, PlusCircle } from "lucide-react";
 import { useMemo } from "react";
-
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
 
 interface HistoryLogProps {
-  asset: Asset;
-  movements: Movement[];
+  asset: Asset | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function HistoryLog({ asset, movements, open, onOpenChange }: HistoryLogProps) {
+export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
+  const firestore = useFirestore();
 
-  const assetMovements = useMemo(() => {
-    return movements
-      .filter(m => m.assetId === asset.id)
-      .sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
-  }, [movements, asset.id]);
+  // A busca de dados agora é feita aqui dentro.
+  const movementsQuery = useMemoFirebase(
+    () =>
+      firestore && asset
+        ? query(
+            collection(firestore, "movements"),
+            where("assetId", "==", asset.id),
+            orderBy("timestamp", "desc")
+          )
+        : null,
+    [firestore, asset]
+  );
 
+  const { data: assetMovements, isLoading } = useCollection<Movement>(movementsQuery);
 
   const getActionIcon = (action: Movement["action"]) => {
     switch(action) {
@@ -80,15 +89,16 @@ export function HistoryLog({ asset, movements, open, onOpenChange }: HistoryLogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Histórico de: {asset.name}</DialogTitle>
-          <DialogDescription>ID: {asset.id}</DialogDescription>
+          <DialogTitle>Histórico de: {asset?.name}</DialogTitle>
+          <DialogDescription>ID: {asset?.id}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-72 w-full rounded-md border">
             <div className="p-4">
-                {assetMovements.length === 0 && (
+                {isLoading && <p className="text-muted-foreground">Carregando histórico...</p>}
+                {!isLoading && assetMovements?.length === 0 && (
                     <p className="text-muted-foreground">Nenhuma movimentação encontrada para este item.</p>
                 )}
-                {assetMovements.length > 0 && (
+                {assetMovements && assetMovements.length > 0 && (
                     <ul className="space-y-4">
                         {assetMovements.map((movement) => (
                             <li key={movement.id} className="flex items-start gap-4">
