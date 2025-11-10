@@ -59,7 +59,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        {user ? `Olá, ${user.displayName || user.email}!` : "Tela inicial"}
+        {user ? `Olá, ${user.displayName || user.email?.split('@')[0]}!` : "Tela inicial"}
       </h1>
 
       <Tabs defaultValue="overview" className="space-y-4">
