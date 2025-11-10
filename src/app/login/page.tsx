@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,33 +16,33 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Terminal } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { initializeFirebase, useUser } from "@/firebase";
+import { FirebaseClientProvider, initializeFirebase, useUser } from "@/firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   Auth,
 } from "firebase/auth";
 
+
 function LoginPageContent() {
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
   const [auth, setAuth] = useState<Auth | null>(null);
   const [email, setEmail] = useState("admin@univag.com.br");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     const { auth: firebaseAuth } = initializeFirebase();
     setAuth(firebaseAuth);
+  }, []);
 
-    // Redirect if user is already logged in from a previous session
-    const unsubscribe = firebaseAuth.onAuthStateChanged(user => {
-      if (user) {
-        router.replace("/dashboard");
-      }
-    });
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, isUserLoading, router]);
 
-    return () => unsubscribe();
-  }, [router]);
 
   const handleLogin = async () => {
     if (!auth) return;
@@ -53,12 +53,12 @@ function LoginPageContent() {
     }
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/dashboard");
+      // O useEffect acima irá lidar com o redirecionamento
     } catch (e: any) {
       if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, email, password);
-          router.replace("/dashboard");
+           // O useEffect acima irá lidar com o redirecionamento
         } catch (creationError: any) {
           setError(creationError.message);
         }
@@ -68,7 +68,7 @@ function LoginPageContent() {
     }
   };
 
-  if (!auth) {
+  if (isUserLoading || user) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="loader"></div>
@@ -89,6 +89,7 @@ function LoginPageContent() {
       </div>
     );
   }
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -145,6 +146,11 @@ function LoginPageContent() {
   );
 }
 
+
 export default function LoginPage() {
-    return <LoginPageContent />;
+  return (
+    <FirebaseClientProvider>
+      <LoginPageContent />
+    </FirebaseClientProvider>
+  );
 }
