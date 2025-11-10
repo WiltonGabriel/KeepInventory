@@ -13,8 +13,10 @@ import { AssetForm } from "./asset-form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDocs, query, where, serverTimestamp, writeBatch, WriteBatch, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, where, serverTimestamp, writeBatch, WriteBatch } from "firebase/firestore";
 import { HistoryLog } from "./history-log";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { errorEmitter } from "@/firebase/error-emitter";
 
 export default function AssetsPage() {
   const firestore = useFirestore();
@@ -51,23 +53,33 @@ export default function AssetsPage() {
   const handleDelete = async (id: string) => {
     if (!firestore) return;
 
-    const batch = writeBatch(firestore);
-
-    const assetRef = doc(firestore, "assets", id);
-    batch.delete(assetRef);
-
-    const movementsQuery = query(collection(firestore, "movements"), where("assetId", "==", id));
-    
     try {
-        const movementsSnapshot = await getDocs(movementsQuery);
-        movementsSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
+        const batch = writeBatch(firestore);
+
+        // Reference to the asset itself
+        const assetRef = doc(firestore, "assets", id);
+
+        // Reference to the nested 'movements' subcollection
+        const movementsRef = collection(firestore, "assets", id, "movements");
+
+        // Get all movement documents to delete them
+        const movementsSnapshot = await getDocs(movementsRef);
+        movementsSnapshot.forEach(movementDoc => {
+            batch.delete(movementDoc.ref);
         });
 
+        // Delete the main asset
+        batch.delete(assetRef);
+
         await batch.commit();
+
         toast({ title: "Patrimônio removido", description: "O item e seu histórico foram removidos com sucesso." });
     } catch (error) {
-        console.error("Error deleting asset and movements: ", error);
+        const contextualError = new FirestorePermissionError({
+            operation: 'delete',
+            path: `assets/${id} and its subcollections`,
+        });
+        errorEmitter.emit('permission-error', contextualError);
         toast({
             variant: "destructive",
             title: "Erro ao remover",
@@ -118,9 +130,9 @@ export default function AssetsPage() {
 
   const logMovement = (batch: WriteBatch, assetId: string, assetName: string, action: "Criado" | "Status Alterado" | "Movido" | "Nome Alterado", from: string, to: string) => {
       if (!firestore) return;
-      const movementRef = doc(collection(firestore, 'movements'));
+      const movementRef = doc(collection(firestore, 'assets', assetId, 'movements'));
       batch.set(movementRef, {
-          assetId,
+          assetId, // Keep assetId for potential denormalized queries later
           assetName,
           action,
           from,
@@ -133,8 +145,9 @@ export default function AssetsPage() {
     if (!firestore || !rooms) return;
 
     try {
+      const batch = writeBatch(firestore);
+
       if (editingAsset) { // Logic for UPDATE
-          const batch = writeBatch(firestore);
           const assetRef = doc(firestore, "assets", editingAsset.id);
           const updates: Partial<Asset> = {};
           let changed = false;
@@ -169,7 +182,6 @@ export default function AssetsPage() {
               return;
           }
           
-          const batch = writeBatch(firestore);
           const newAssetData = { name: values.name, roomId: values.roomId, status: values.status };
           const assetRef = doc(firestore, "assets", newId);
           batch.set(assetRef, newAssetData);
@@ -184,8 +196,13 @@ export default function AssetsPage() {
       setEditingAsset(undefined);
 
     } catch (error) {
-       console.error("Error submitting asset form: ", error);
-       toast({
+       const contextualError = new FirestorePermissionError({
+            operation: editingAsset ? 'update' : 'create',
+            path: `assets/${editingAsset?.id || 'new-asset'}`,
+            requestResourceData: values,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({
             variant: "destructive",
             title: "Erro ao salvar",
             description: "Não foi possível salvar as informações do patrimônio.",

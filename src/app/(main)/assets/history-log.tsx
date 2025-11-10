@@ -14,9 +14,8 @@ import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Edit3, PlusCircle } from "lucide-react";
-import { useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 
 interface HistoryLogProps {
   asset: Asset | null;
@@ -27,12 +26,12 @@ interface HistoryLogProps {
 export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
   const firestore = useFirestore();
 
+  // Query the nested subcollection
   const movementsQuery = useMemoFirebase(
     () =>
       firestore && asset
         ? query(
-            collection(firestore, "movements"),
-            where("assetId", "==", asset.id),
+            collection(firestore, "assets", asset.id, "movements"),
             orderBy("timestamp", "desc")
           )
         : null,

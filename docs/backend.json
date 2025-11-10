@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Block": {
@@ -204,22 +205,26 @@
         }
       },
       {
-        "path": "/movements/{movementId}",
+        "path": "/assets/{assetId}/movements/{movementId}",
         "definition": {
           "entityName": "Movement",
           "schema": {
             "$ref": "#/backend/entities/Movement"
           },
-          "description": "Stores the history of asset movements and changes. The 'movementId' is a unique identifier for each log entry.",
+          "description": "Stores the history of a specific asset's movements and changes as a nested subcollection.",
           "params": [
             {
+              "name": "assetId",
+              "description": "The ID of the asset being tracked."
+            },
+            {
               "name": "movementId",
-              "description": "Unique identifier for the movement log."
+              "description": "Unique identifier for the movement log entry."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to mirror the hierarchical nature of the inventory system (Blocks > Sectors > Rooms > Assets). Each entity is stored in its own top-level collection for simplicity and scalability. A new top-level collection 'movements' has been added to log all changes to assets, which allows for efficient querying of an asset's history without impacting the performance of asset reads. This design avoids nested collections, which can complicate querying and security rules. Security will rely on standard Firebase Authentication. Since there are no specific authorization requirements outlined besides basic authentication (no roles, groups, or shared access), path-based rules centered around the authenticated user's ID are sufficient. The design does not include user-specific data or access restrictions. Therefore, denormalization for authorization independence is not required in this scenario. This structure supports the QAPs because each collection represents a distinct entity type with homogeneous security requirements (Structural Segregation)."
+    "reasoning": "The Firestore structure is refactored to be more secure and efficient. The 'movements' are no longer a top-level collection but are now a subcollection nested within each 'asset' document. This hierarchical structure (/assets/{assetId}/movements/{movementId}) simplifies security rules, as access to an asset's history is inherently tied to access to the asset itself. This eliminates the need for complex global queries on the movements collection, which was causing permission errors. All other entities (Blocks, Sectors, Rooms, Assets) remain in their own top-level collections for simplicity and scalability."
   }
 }

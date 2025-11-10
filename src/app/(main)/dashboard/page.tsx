@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Block, Sector, Room, Asset, Movement } from "@/lib/types";
+import { Block, Sector, Room, Asset } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
@@ -11,16 +11,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Archive, Building, DoorOpen, Building2, BarChart3, CheckCircle, AlertTriangle, ArrowRight, Edit3, PlusCircle } from "lucide-react";
+import { Archive, Building, DoorOpen, Building2, BarChart3, CheckCircle, AlertTriangle } from "lucide-react";
 import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
+import { collection } from "firebase/firestore";
 
 type Stats = {
   assetCount: number;
+  roomCount: number;
+  sectorCount: number;
+  blockCount: number;
   activeAssetCount: number;
   lostAssetCount: number;
 };
@@ -34,31 +33,21 @@ export default function DashboardPage() {
     const sectorsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'sectors') : null, [firestore]);
     const blocksCollection = useMemoFirebase(() => firestore ? collection(firestore, 'blocks') : null, [firestore]);
 
-    const movementsQuery = useMemoFirebase(
-      () =>
-        firestore
-          ? query(
-              collection(firestore, "movements"),
-              orderBy("timestamp", "desc"),
-              limit(10)
-            )
-          : null,
-      [firestore]
-    );
-
     const { data: assets } = useCollection<Asset>(assetsCollection);
     const { data: rooms } = useCollection<Room>(roomsCollection);
     const { data: sectors } = useCollection<Sector>(sectorsCollection);
     const { data: blocks } = useCollection<Block>(blocksCollection);
-    const { data: recentMovements, isLoading: isLoadingMovements } = useCollection<Movement>(movementsQuery);
 
 
   const stats: Stats = useMemo(() => {
     const assetCount = assets?.length || 0;
+    const roomCount = rooms?.length || 0;
+    const sectorCount = sectors?.length || 0;
+    const blockCount = blocks?.length || 0;
     const activeAssetCount = assets?.filter(a => a.status === 'Em Uso').length || 0;
     const lostAssetCount = assets?.filter(a => a.status === 'Perdido').length || 0;
-    return { assetCount, activeAssetCount, lostAssetCount };
-    }, [assets]);
+    return { assetCount, roomCount, sectorCount, blockCount, activeAssetCount, lostAssetCount };
+    }, [assets, rooms, sectors, blocks]);
 
 
   const getSectorsForBlock = (blockId: string) => {
@@ -70,50 +59,6 @@ export default function DashboardPage() {
   const getAssetsForRoom = (roomId: string) => {
     return assets?.filter(a => a.roomId === roomId) || [];
   };
-
-  const getActionIcon = (action: Movement["action"]) => {
-    switch(action) {
-      case 'Criado':
-        return <PlusCircle className="h-4 w-4 text-green-500" />;
-      case 'Status Alterado':
-        return <Edit3 className="h-4 w-4 text-blue-500" />;
-      case 'Movido':
-        return <ArrowRight className="h-4 w-4 text-orange-500" />;
-      case 'Nome Alterado':
-        return <Edit3 className="h-4 w-4 text-purple-500" />;
-      default:
-        return null;
-    }
-  }
-
-  const renderMovementDetails = (movement: Movement) => {
-    const assetName = <span className="font-bold">{`"${movement.assetName}"`}</span>;
-    switch (movement.action) {
-      case "Criado":
-        return <>Patrimônio {assetName} foi criado.</>;
-      case "Status Alterado":
-        return (
-          <>
-            Status do {assetName} alterado de <Badge variant="outline">{movement.from}</Badge> para <Badge variant="outline">{movement.to}</Badge>.
-          </>
-        );
-      case "Movido":
-        return (
-          <>
-            {assetName} movido de <Badge variant="secondary">{movement.from}</Badge> para <Badge variant="secondary">{movement.to}</Badge>.
-          </>
-        );
-      case "Nome Alterado":
-        return (
-            <>
-                Nome do patrimônio alterado de <span className="font-semibold">{movement.from}</span> para <span className="font-semibold">{movement.to}</span>.
-            </>
-        );
-      default:
-        return "Ação desconhecida.";
-    }
-  };
-
 
   return (
     <div className="flex flex-col gap-8">
@@ -129,68 +74,70 @@ export default function DashboardPage() {
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Patrimônios</CardTitle>
-                <Archive className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold">{stats.assetCount}</div>
-                <p className="text-xs text-muted-foreground">Itens cadastrados no sistema</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Itens Ativos</CardTitle>
-                <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold">{stats.activeAssetCount}</div>
-                <p className="text-xs text-muted-foreground">Itens com status "Em Uso"</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Itens Perdidos</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold">{stats.lostAssetCount}</div>
-                <p className="text-xs text-muted-foreground">Itens com status "Perdido"</p>
-                </CardContent>
-            </Card>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total de Patrimônios</CardTitle>
+                    <Archive className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.assetCount}</div>
+                    <p className="text-xs text-muted-foreground">Itens cadastrados no sistema</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Blocos</CardTitle>
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.blockCount}</div>
+                    <p className="text-xs text-muted-foreground">Blocos mapeados</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Setores</CardTitle>
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.sectorCount}</div>
+                    <p className="text-xs text-muted-foreground">Setores mapeados</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Salas</CardTitle>
+                    <DoorOpen className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.roomCount}</div>
+                    <p className="text-xs text-muted-foreground">Salas mapeadas</p>
+                    </CardContent>
+                </Card>
           </div>
-            <Card>
-              <CardHeader>
-                  <CardTitle>Últimas Movimentações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-72 w-full">
-                  <div className="p-4">
-                      {isLoadingMovements && <p>Carregando histórico...</p>}
-                      {!isLoadingMovements && recentMovements && recentMovements.length === 0 && (
-                          <p className="text-muted-foreground">Nenhuma movimentação encontrada.</p>
-                      )}
-                      {!isLoadingMovements && recentMovements && recentMovements.length > 0 && (
-                          <ul className="space-y-4">
-                              {recentMovements.map((movement) => (
-                                  <li key={movement.id} className="flex items-start gap-4">
-                                      <div className="flex-shrink-0 pt-1">{getActionIcon(movement.action)}</div>
-                                      <div className="flex-grow">
-                                          <p className="text-sm">{renderMovementDetails(movement)}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                              {movement.timestamp ? format(movement.timestamp.toDate(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'Data desconhecida'}
-                                          </p>
-                                      </div>
-                                  </li>
-                              ))}
-                          </ul>
-                      )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <div className="grid gap-4 md:grid-cols-2">
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Itens Ativos</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.activeAssetCount}</div>
+                    <p className="text-xs text-muted-foreground">Itens com status "Em Uso"</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Itens Perdidos</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stats.lostAssetCount}</div>
+                    <p className="text-xs text-muted-foreground">Itens com status "Perdido"</p>
+                    </CardContent>
+                </Card>
+            </div>
         </TabsContent>
 
         <TabsContent value="hierarchy">
