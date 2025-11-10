@@ -47,18 +47,20 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
   
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(formSchema),
+    // Define os valores padrão para o modo de criação
     defaultValues: {
       name: defaultValues?.name || "",
       status: defaultValues?.status || "Em Uso",
-      roomId: defaultValues?.roomId || "",
-      sectorId: "", // Será preenchido pelo useEffect
-      blockId: "", // Será preenchido pelo useEffect
+      blockId: "",
+      sectorId: "",
+      roomId: "",
     },
   });
 
-  // Efeito para popular os campos de localização no modo de edição
+  // Efeito para popular os campos no modo de edição
   useEffect(() => {
-    if (defaultValues?.roomId && allRooms.length && allSectors.length && blocks.length) {
+    // Só executa se estiver editando e os dados necessários estiverem carregados
+    if (defaultValues?.roomId && allRooms.length > 0 && allSectors.length > 0 && blocks.length > 0) {
       const room = allRooms.find(r => r.id === defaultValues.roomId);
       if (room) {
         const sector = allSectors.find(s => s.id === room.sectorId);
@@ -66,20 +68,24 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
           const block = blocks.find(b => b.id === sector.blockId);
           if (block) {
             // Seta os valores no formulário para preencher os selects
-            form.setValue('blockId', block.id);
-            form.setValue('sectorId', sector.id);
-            form.setValue('roomId', room.id);
+            // Usamos reset para atualizar o estado inicial do formulário no modo de edição
+            form.reset({
+              name: defaultValues.name || "",
+              status: defaultValues.status || "Em Uso",
+              blockId: block.id,
+              sectorId: sector.id,
+              roomId: room.id,
+            });
           }
         }
       }
+    } else if (defaultValues) {
+        // Fallback para preencher nome e status se a localização não puder ser determinada
+        form.setValue('name', defaultValues.name || "");
+        form.setValue('status', defaultValues.status || "Em Uso");
     }
-     // Repopula o nome e status caso não sejam preenchidos inicialmente
-    if (defaultValues?.name) form.setValue('name', defaultValues.name);
-    if (defaultValues?.status) form.setValue('status', defaultValues.status);
-
-  }, [defaultValues, allRooms, allSectors, blocks, form.setValue]);
+  }, [defaultValues, allRooms, allSectors, blocks, form.reset, form.setValue, form]);
   
-
   const watchedBlockId = form.watch("blockId");
   const watchedSectorId = form.watch("sectorId");
 
@@ -150,8 +156,9 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                     <FormLabel>Bloco</FormLabel>
                     <Select onValueChange={(value) => {
                         field.onChange(value);
-                        form.setValue('sectorId', '');
-                        form.setValue('roomId', '');
+                        // Limpa os campos dependentes
+                        form.setValue('sectorId', '', { shouldValidate: true });
+                        form.setValue('roomId', '', { shouldValidate: true });
                     }} value={field.value}>
                         <FormControl>
                         <SelectTrigger>
@@ -179,7 +186,8 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                     <FormLabel>Setor</FormLabel>
                     <Select onValueChange={(value) => {
                         field.onChange(value);
-                        form.setValue('roomId', '');
+                        // Limpa o campo dependente
+                        form.setValue('roomId', '', { shouldValidate: true });
                     }} value={field.value} disabled={!watchedBlockId || availableSectors.length === 0}>
                         <FormControl>
                         <SelectTrigger>
