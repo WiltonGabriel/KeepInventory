@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -32,17 +31,24 @@ import {
   CheckCircle,
   AlertTriangle,
   History,
+  PlusCircle,
+  Trash2,
+  Edit3,
+  ArrowRightLeft
 } from 'lucide-react';
 import {
   useCollection,
   useFirestore,
   useMemoFirebase,
 } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, writeBatch } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AssetsByStatusChart } from './charts/assets-by-status-chart';
 import { AssetsBySectorChart } from './charts/assets-by-sector-chart';
+import { HardConfirmationDialog } from '@/components/ui/hard-confirmation-dialog';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 type Stats = {
   assetCount: number;
@@ -57,6 +63,7 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const { user } = useAuthSession();
   const [greeting, setGreeting] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const getCurrentGreeting = () => {
@@ -89,17 +96,21 @@ export default function DashboardPage() {
     [firestore]
   );
   
-  // Consulta a nova coleção principal 'log_geral'
+  const generalLogCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'log_geral') : null),
+    [firestore]
+  );
+  
   const generalLogQuery = useMemoFirebase(
     () =>
-      firestore
+      generalLogCollection
         ? query(
-            collection(firestore, 'log_geral'),
+            generalLogCollection,
             orderBy('timestamp', 'desc'),
             limit(10)
           )
         : null,
-    [firestore]
+    [generalLogCollection]
   );
   
   const { data: assets, isLoading: isLoadingAssets } = useCollection<Asset>(assetsCollection);
@@ -142,6 +153,49 @@ export default function DashboardPage() {
     const emailPrefix = user.email.split('@')[0];
     return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
   }
+
+  const getActionIcon = (actionText: string) => {
+    const text = actionText.toLowerCase();
+    if (text.includes('criado')) {
+      return <PlusCircle className="h-4 w-4 text-green-500" />;
+    }
+    if (text.includes('removido')) {
+      return <Trash2 className="h-4 w-4 text-destructive" />;
+    }
+    if (text.includes('alterado')) {
+      return <Edit3 className="h-4 w-4 text-blue-500" />;
+    }
+    if (text.includes('movido')) {
+      return <ArrowRightLeft className="h-4 w-4 text-orange-500" />;
+    }
+    return <History className="h-4 w-4" />;
+  };
+
+  const handleClearLog = async () => {
+    if (!firestore || !generalLogCollection) {
+        toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível acessar a coleção de logs.' });
+        return;
+    }
+    
+    try {
+        const logSnapshot = await getDocs(generalLogCollection);
+        if (logSnapshot.empty) {
+            toast({ title: 'Tudo limpo!', description: 'Não havia logs para serem removidos.' });
+            return;
+        }
+
+        const batch = writeBatch(firestore);
+        logSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        toast({ title: 'Sucesso!', description: 'O log de atividades foi limpo completamente.' });
+    } catch (error) {
+        console.error("Error clearing logs: ", error);
+        toast({ variant: 'destructive', title: 'Erro ao Limpar', description: 'Não foi possível limpar o log de atividades.' });
+    }
+  };
 
   const isLoading = isLoadingAssets || isLoadingRooms || isLoadingSectors;
 
@@ -218,9 +272,24 @@ export default function DashboardPage() {
           </div>
            <div className="grid grid-cols-1 gap-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Log de Atividade Recente</CardTitle>
-                <CardDescription>As 10 últimas ações no inventário.</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Log de Atividade Recente</CardTitle>
+                  <CardDescription>As 10 últimas ações no inventário.</CardDescription>
+                </div>
+                <HardConfirmationDialog
+                  trigger={
+                    <Button variant="outline" size="icon" disabled={!recentLogs || recentLogs.length === 0}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  }
+                  title="Você tem certeza absoluta?"
+                  description='Esta ação não pode ser desfeita. Isso excluirá permanentemente todo o log de atividades. Para confirmar, digite:'
+                  itemName="LIMPAR LOG GERAL"
+                  onConfirm={handleClearLog}
+                  confirmButtonText="Eu entendo, apagar todo o log"
+                  variant="destructive"
+                />
               </CardHeader>
               <CardContent>
                 {isLoadingLogs && <p className="text-sm text-muted-foreground">Carregando atividades...</p>}
@@ -231,7 +300,7 @@ export default function DashboardPage() {
                   <ul className="space-y-4">
                     {recentLogs.map((log) => (
                       <li key={log.id} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 pt-1"><History className="h-4 w-4" /></div>
+                        <div className="flex-shrink-0 pt-1">{getActionIcon(log.acao)}</div>
                         <div className="flex-grow">
                           <div className="text-sm">{log.acao}</div>
                           <p className="text-xs text-muted-foreground">
