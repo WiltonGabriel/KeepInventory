@@ -29,7 +29,6 @@ import {
   Building,
   DoorOpen,
   Building2,
-  BarChart3,
   CheckCircle,
   AlertTriangle,
   History,
@@ -42,6 +41,8 @@ import {
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AssetsByStatusChart } from './charts/assets-by-status-chart';
+import { AssetsBySectorChart } from './charts/assets-by-sector-chart';
 
 type Stats = {
   assetCount: number;
@@ -101,9 +102,9 @@ export default function DashboardPage() {
     [firestore]
   );
   
-  const { data: assets } = useCollection<Asset>(assetsCollection);
-  const { data: rooms } = useCollection<Room>(roomsCollection);
-  const { data: sectors } = useCollection<Sector>(sectorsCollection);
+  const { data: assets, isLoading: isLoadingAssets } = useCollection<Asset>(assetsCollection);
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
+  const { data: sectors, isLoading: isLoadingSectors } = useCollection<Sector>(sectorsCollection);
   const { data: blocks } = useCollection<Block>(blocksCollection);
   const { data: recentLogs, isLoading: isLoadingLogs } = useCollection<LogGeral>(generalLogQuery);
 
@@ -141,6 +142,8 @@ export default function DashboardPage() {
     const emailPrefix = user.email.split('@')[0];
     return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
   }
+
+  const isLoading = isLoadingAssets || isLoadingRooms || isLoadingSectors;
 
   return (
     <div className="flex flex-col gap-8">
@@ -330,18 +333,11 @@ export default function DashboardPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="charts">
-          <Card className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[300px]">
-            <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
-              <BarChart3 className="h-16 w-16 text-muted-foreground" />
-              <h3 className="text-2xl font-bold tracking-tight">
-                Gráficos em Breve
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Esta área exibirá gráficos e visualizações sobre o inventário.
-              </p>
-            </CardContent>
-          </Card>
+        <TabsContent value="charts" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <AssetsByStatusChart assets={assets || []} isLoading={isLoading} />
+              <AssetsBySectorChart assets={assets || []} rooms={rooms || []} sectors={sectors || []} isLoading={isLoading} />
+            </div>
         </TabsContent>
       </Tabs>
     </div>
