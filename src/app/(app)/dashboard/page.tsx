@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useAuthSession } from '@/auth/provider';
 import {
   Block,
   Sector,
@@ -53,6 +54,22 @@ type Stats = {
 
 export default function DashboardPage() {
   const firestore = useFirestore();
+  const { user } = useAuthSession();
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const getCurrentGreeting = () => {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 5 && currentHour < 12) {
+        return 'Bom dia';
+      }
+      if (currentHour >= 12 && currentHour < 18) {
+        return 'Boa tarde';
+      }
+      return 'Boa noite';
+    };
+    setGreeting(getCurrentGreeting());
+  }, []);
 
   const assetsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'patrimonios') : null),
@@ -119,10 +136,16 @@ export default function DashboardPage() {
     return assets?.filter((a) => a.roomId === roomId) || [];
   };
 
+  const getUserFirstName = () => {
+    if (!user?.email) return '';
+    const emailPrefix = user.email.split('@')[0];
+    return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        Tela inicial
+        {greeting}, {getUserFirstName()}!
       </h1>
 
       <Tabs defaultValue="overview" className="space-y-4">
