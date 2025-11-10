@@ -46,6 +46,4 @@ export interface UserProfile {
 }
 
 export type Entity = Block | Sector | Room | Asset | Movement;
-export type EntityType = 'blocks' | 'sectors' | 'rooms' | 'assets' | 'movements';
-
-    
+export type EntityType = 'blocos' | 'setores' | 'salas' | 'patrimonios' | 'movimentacoes';

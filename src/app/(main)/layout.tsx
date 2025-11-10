@@ -37,7 +37,7 @@ function MainLayoutContent({
       const seedData = async () => {
         try {
           // Check for Block A
-          const blocksRef = collection(firestore, 'blocks');
+          const blocksRef = collection(firestore, 'blocos');
           const blockQuery = query(blocksRef, where('name', '==', 'Bloco A'), limit(1));
           const blockSnapshot = await getDocs(blockQuery);
           let blockId: string;
@@ -50,7 +50,7 @@ function MainLayoutContent({
           }
 
           // Check for TI Sector
-          const sectorsRef = collection(firestore, 'sectors');
+          const sectorsRef = collection(firestore, 'setores');
           const sectorQuery = query(sectorsRef, where('name', '==', 'Tecnologia da Informação'), limit(1));
           const sectorSnapshot = await getDocs(sectorQuery);
 

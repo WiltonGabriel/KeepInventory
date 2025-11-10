@@ -18,8 +18,8 @@ import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlo
 
 export default function SectorsPage() {
   const firestore = useFirestore();
-  const sectorsCollection = useMemoFirebase(() => collection(firestore, "sectors"), [firestore]);
-  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocks"), [firestore]);
+  const sectorsCollection = useMemoFirebase(() => collection(firestore, "setores"), [firestore]);
+  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocos"), [firestore]);
 
   const { data: sectors, isLoading: isLoadingSectors } = useCollection<Sector>(sectorsCollection);
   const { data: blocks, isLoading: isLoadingBlocks } = useCollection<Block>(blocksCollection);
@@ -42,17 +42,17 @@ export default function SectorsPage() {
   const handleDelete = (id: string) => {
     if (!firestore) return;
     // TODO: Consider cascading deletes for rooms and assets within this sector.
-    deleteDocumentNonBlocking(doc(firestore, "sectors", id));
+    deleteDocumentNonBlocking(doc(firestore, "setores", id));
     toast({ title: "Setor removido", description: "O setor foi removido com sucesso." });
   };
 
   const handleFormSubmit = (values: Omit<Sector, 'id'>) => {
     if (!firestore) return;
     if (editingSector) {
-      updateDocumentNonBlocking(doc(firestore, "sectors", editingSector.id), values);
+      updateDocumentNonBlocking(doc(firestore, "setores", editingSector.id), values);
       toast({ title: "Setor atualizado", description: "As informações do setor foram salvas." });
     } else {
-      addDocumentNonBlocking(collection(firestore, "sectors"), values);
+      addDocumentNonBlocking(collection(firestore, "setores"), values);
       toast({ title: "Setor adicionado", description: "Um novo setor foi criado com sucesso." });
     }
     setIsFormOpen(false);

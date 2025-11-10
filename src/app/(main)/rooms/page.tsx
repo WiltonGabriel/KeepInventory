@@ -17,9 +17,9 @@ import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlo
 
 export default function RoomsPage() {
   const firestore = useFirestore();
-  const roomsCollection = useMemoFirebase(() => collection(firestore, "rooms"), [firestore]);
-  const sectorsCollection = useMemoFirebase(() => collection(firestore, "sectors"), [firestore]);
-  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocks"), [firestore]);
+  const roomsCollection = useMemoFirebase(() => collection(firestore, "salas"), [firestore]);
+  const sectorsCollection = useMemoFirebase(() => collection(firestore, "setores"), [firestore]);
+  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocos"), [firestore]);
 
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
   const { data: sectors, isLoading: isLoadingSectors } = useCollection<Sector>(sectorsCollection);
@@ -43,17 +43,17 @@ export default function RoomsPage() {
   const handleDelete = (id: string) => {
     if (!firestore) return;
     // TODO: Cascade delete assets in this room.
-    deleteDocumentNonBlocking(doc(firestore, "rooms", id));
+    deleteDocumentNonBlocking(doc(firestore, "salas", id));
     toast({ title: "Sala removida", description: "A sala e seus itens associados foram removidos." });
   };
 
   const handleFormSubmit = (values: Omit<Room, 'id'>) => {
     if (!firestore) return;
     if (editingRoom) {
-      updateDocumentNonBlocking(doc(firestore, "rooms", editingRoom.id), values);
+      updateDocumentNonBlocking(doc(firestore, "salas", editingRoom.id), values);
       toast({ title: "Sala atualizada", description: "As informações da sala foram salvas." });
     } else {
-      addDocumentNonBlocking(collection(firestore, "rooms"), values);
+      addDocumentNonBlocking(collection(firestore, "salas"), values);
       toast({ title: "Sala adicionada", description: "Uma nova sala foi criada com sucesso." });
     }
     setIsFormOpen(false);

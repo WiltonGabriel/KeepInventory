@@ -31,7 +31,7 @@ export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
     () =>
       firestore && asset
         ? query(
-            collection(firestore, "assets", asset.id, "movements"),
+            collection(firestore, "patrimonios", asset.id, "movimentacoes"),
             orderBy("timestamp", "desc")
           )
         : null,
@@ -117,5 +117,3 @@ export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
     </Dialog>
   );
 }
-
-    

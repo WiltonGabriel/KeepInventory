@@ -21,10 +21,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 export default function AssetsPage() {
   const firestore = useFirestore();
-  const assetsCollection = useMemoFirebase(() => firestore ? collection(firestore, "assets") : null, [firestore]);
-  const roomsCollection = useMemoFirebase(() => firestore ? collection(firestore, "rooms") : null, [firestore]);
-  const sectorsCollection = useMemoFirebase(() => firestore ? collection(firestore, "sectors") : null, [firestore]);
-  const blocksCollection = useMemoFirebase(() => firestore ? collection(firestore, "blocks") : null, [firestore]);
+  const assetsCollection = useMemoFirebase(() => firestore ? collection(firestore, "patrimonios") : null, [firestore]);
+  const roomsCollection = useMemoFirebase(() => firestore ? collection(firestore, "salas") : null, [firestore]);
+  const sectorsCollection = useMemoFirebase(() => firestore ? collection(firestore, "setores") : null, [firestore]);
+  const blocksCollection = useMemoFirebase(() => firestore ? collection(firestore, "blocos") : null, [firestore]);
 
   const { data: assets, isLoading: isLoadingAssets } = useCollection<Asset>(assetsCollection);
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
@@ -56,8 +56,8 @@ export default function AssetsPage() {
 
     try {
         const batch = writeBatch(firestore);
-        const assetRef = doc(firestore, "assets", id);
-        const movementsRef = collection(firestore, "assets", id, "movements");
+        const assetRef = doc(firestore, "patrimonios", id);
+        const movementsRef = collection(firestore, "patrimonios", id, "movimentacoes");
         const movementsSnapshot = await getDocs(movementsRef);
         movementsSnapshot.forEach(movementDoc => {
             batch.delete(movementDoc.ref);
@@ -69,7 +69,7 @@ export default function AssetsPage() {
     } catch (error) {
         const contextualError = new FirestorePermissionError({
             operation: 'delete',
-            path: `assets/${id} and its subcollections`,
+            path: `patrimonios/${id} and its subcollections`,
         });
         errorEmitter.emit('permission-error', contextualError);
         toast({
@@ -98,7 +98,7 @@ export default function AssetsPage() {
     const prefix = sector.abbreviation.toUpperCase();
 
     const assetsWithPrefixQuery = query(
-      collection(firestore, "assets"),
+      collection(firestore, "patrimonios"),
       where("id", ">=", prefix),
       where("id", "<", prefix + 'z')
     );
@@ -122,7 +122,7 @@ export default function AssetsPage() {
 
   const logMovement = (batch: WriteBatch, assetId: string, assetName: string, action: "Criado" | "Status Alterado" | "Movido" | "Nome Alterado", from: string, to: string) => {
       if (!firestore) return;
-      const movementRef = doc(collection(firestore, 'assets', assetId, 'movements'));
+      const movementRef = doc(collection(firestore, 'patrimonios', assetId, 'movimentacoes'));
       batch.set(movementRef, {
           assetId,
           assetName,
@@ -138,7 +138,7 @@ export default function AssetsPage() {
 
     try {
         const batch = writeBatch(firestore);
-        const assetRef = doc(firestore, "assets", asset.id);
+        const assetRef = doc(firestore, "patrimonios", asset.id);
         
         batch.update(assetRef, { status: newStatus });
         logMovement(batch, asset.id, asset.name, "Status Alterado", asset.status, newStatus);
@@ -148,7 +148,7 @@ export default function AssetsPage() {
     } catch (error) {
         const contextualError = new FirestorePermissionError({
             operation: 'update',
-            path: `assets/${asset.id}`,
+            path: `patrimonios/${asset.id}`,
             requestResourceData: { status: newStatus },
         });
         errorEmitter.emit('permission-error', contextualError);
@@ -167,7 +167,7 @@ export default function AssetsPage() {
       const batch = writeBatch(firestore);
 
       if (editingAsset) { // Logic for UPDATE
-          const assetRef = doc(firestore, "assets", editingAsset.id);
+          const assetRef = doc(firestore, "patrimonios", editingAsset.id);
           const updates: Partial<Asset> = {};
           let changed = false;
 
@@ -202,7 +202,7 @@ export default function AssetsPage() {
           }
           
           const newAssetData = { name: values.name, roomId: values.roomId, status: values.status };
-          const assetRef = doc(firestore, "assets", newId);
+          const assetRef = doc(firestore, "patrimonios", newId);
           batch.set(assetRef, newAssetData);
 
           logMovement(batch, newId, values.name, "Criado", "N/A", values.name);
@@ -217,7 +217,7 @@ export default function AssetsPage() {
     } catch (error) {
        const contextualError = new FirestorePermissionError({
             operation: editingAsset ? 'update' : 'create',
-            path: `assets/${editingAsset?.id || 'new-asset'}`,
+            path: `patrimonios/${editingAsset?.id || 'new-asset'}`,
             requestResourceData: values,
         });
         errorEmitter.emit('permission-error', contextualError);
@@ -386,5 +386,3 @@ export default function AssetsPage() {
     </div>
   );
 }
-
-    

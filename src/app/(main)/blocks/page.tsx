@@ -22,7 +22,7 @@ import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlo
 
 export default function BlocksPage() {
   const firestore = useFirestore();
-  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocks"), [firestore]);
+  const blocksCollection = useMemoFirebase(() => collection(firestore, "blocos"), [firestore]);
   const { data: blocks, isLoading } = useCollection<Block>(blocksCollection);
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,17 +43,17 @@ export default function BlocksPage() {
   
   const handleDelete = (id: string) => {
     if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "blocks", id));
+    deleteDocumentNonBlocking(doc(firestore, "blocos", id));
     toast({ title: "Bloco removido", description: "O bloco foi removido com sucesso." });
   };
 
   const handleFormSubmit = (values: { name: string }) => {
     if (!firestore) return;
     if (editingBlock) {
-      updateDocumentNonBlocking(doc(firestore, "blocks", editingBlock.id), values);
+      updateDocumentNonBlocking(doc(firestore, "blocos", editingBlock.id), values);
       toast({ title: "Bloco atualizado", description: "As informações do bloco foram salvas." });
     } else {
-      addDocumentNonBlocking(collection(firestore, "blocks"), values);
+      addDocumentNonBlocking(collection(firestore, "blocos"), values);
       toast({ title: "Bloco adicionado", description: "Um novo bloco foi criado com sucesso." });
     }
     setIsFormOpen(false);

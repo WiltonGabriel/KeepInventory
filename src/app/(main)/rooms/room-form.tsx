@@ -59,7 +59,7 @@ export function RoomForm({ onSubmit, defaultValues, sectors }: RoomFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Setor</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um setor" />

@@ -1,65 +1,37 @@
-/**
- * @fileoverview Firestore Security Rules for the inventory system.
- *
- * Core Philosophy:
- * This ruleset allows read and write access to authenticated users for the main data collections.
- * It includes a specific rule for collection group queries on 'movements' to support the dashboard's activity log.
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Grants read and write access to any authenticated user for blocks.
-     */
-    match /blocks/{blockId} {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /blocos/{blocoId} {
       allow read, write: if isSignedIn();
     }
 
-    /**
-     * @description Grants read and write access to any authenticated user for sectors.
-     */
-    match /sectors/{sectorId} {
+    match /setores/{setorId} {
       allow read, write: if isSignedIn();
     }
 
-    /**
-     * @description Grants read and write access to any authenticated user for rooms.
-     */
-    match /rooms/{roomId} {
+    match /salas/{salaId} {
       allow read, write: if isSignedIn();
     }
 
-    /**
-     * @description Grants read and write access to any authenticated user for assets.
-     * This rule also governs write access to the nested 'movements' subcollection.
-     */
-    match /assets/{assetId} {
+    match /patrimonios/{patrimonioId} {
       allow read, write: if isSignedIn();
       
-      /**
-       * @description Manages write access to the nested movements subcollection.
-       * Allows creating and deleting logs for authenticated users.
-       * Prevents modification of existing logs to ensure data integrity.
-       */
-      match /movements/{movementId} {
+      // Regra para escrita na subcoleção (imutável)
+      match /movimentacoes/{movimentacaoId} {
         allow create, delete: if isSignedIn();
-        allow update: if false; // Deny updates to make logs immutable.
+        allow update: if false; 
       }
     }
     
-    /**
-     * @description This rule allows a collection group query on 'movements'.
-     * It's necessary for features like the "Recent Activity" feed on the dashboard,
-     * which needs to query across all 'movements' subcollections.
-     * It grants read (list) access to any authenticated user.
-     */
-    match /{path=**}/movements/{movementId} {
-      allow list: if isSignedIn();
-    }
-
-    function isSignedIn() {
-      return request.auth != null;
+    // Regra para a consulta collectionGroup do Dashboard
+    match /{path=**}/movimentacoes/{movimentacaoId} {
+      allow read: if isSignedIn();
     }
   }
 }

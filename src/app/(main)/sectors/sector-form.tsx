@@ -76,7 +76,7 @@ export function SectorForm({ onSubmit, defaultValues, blocks }: SectorFormProps)
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bloco</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um bloco" />
@@ -99,5 +99,3 @@ export function SectorForm({ onSubmit, defaultValues, blocks }: SectorFormProps)
     </Form>
   );
 }
-
-    

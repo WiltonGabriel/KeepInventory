@@ -63,19 +63,19 @@ export default function DashboardPage() {
   const { user } = useUser();
 
   const assetsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'assets') : null),
+    () => (firestore ? collection(firestore, 'patrimonios') : null),
     [firestore]
   );
   const roomsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'rooms') : null),
+    () => (firestore ? collection(firestore, 'salas') : null),
     [firestore]
   );
   const sectorsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'sectors') : null),
+    () => (firestore ? collection(firestore, 'setores') : null),
     [firestore]
   );
   const blocksCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'blocks') : null),
+    () => (firestore ? collection(firestore, 'blocos') : null),
     [firestore]
   );
 
@@ -83,7 +83,7 @@ export default function DashboardPage() {
     () =>
       firestore
         ? query(
-            collectionGroup(firestore, 'movements'),
+            collectionGroup(firestore, 'movimentacoes'),
             orderBy('timestamp', 'desc'),
             limit(10)
           )
@@ -370,5 +370,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

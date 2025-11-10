@@ -3,17 +3,17 @@
   "entities": {
     "Block": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Block",
+      "title": "Bloco",
       "type": "object",
-      "description": "Represents a physical block or building within the inventory system.",
+      "description": "Representa um bloco ou edifício físico dentro do sistema de inventário.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Block entity."
+          "description": "Identificador único para a entidade Bloco."
         },
         "name": {
           "type": "string",
-          "description": "The name of the block."
+          "description": "O nome do bloco."
         }
       },
       "required": [
@@ -23,21 +23,21 @@
     },
     "Sector": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Sector",
+      "title": "Setor",
       "type": "object",
-      "description": "Represents a sector or department within a block.",
+      "description": "Representa um setor ou departamento dentro de um bloco.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Sector entity."
+          "description": "Identificador único para a entidade Setor."
         },
         "name": {
           "type": "string",
-          "description": "The name of the sector."
+          "description": "O nome do setor."
         },
         "blockId": {
           "type": "string",
-          "description": "Reference to Block. (Relationship: Block 1:N Sector)"
+          "description": "Referência ao Bloco. (Relação: Bloco 1:N Setor)"
         }
       },
       "required": [
@@ -48,21 +48,21 @@
     },
     "Room": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Room",
+      "title": "Sala",
       "type": "object",
-      "description": "Represents a room within a sector.",
+      "description": "Representa uma sala dentro de um setor.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Room entity."
+          "description": "Identificador único para a entidade Sala."
         },
         "name": {
           "type": "string",
-          "description": "The name of the room."
+          "description": "O nome da sala."
         },
         "sectorId": {
           "type": "string",
-          "description": "Reference to Sector. (Relationship: Sector 1:N Room)"
+          "description": "Referência ao Setor. (Relação: Setor 1:N Sala)"
         }
       },
       "required": [
@@ -73,60 +73,60 @@
     },
     "Asset": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Asset",
+      "title": "Patrimonio",
       "type": "object",
-      "description": "Represents an asset or item within a room.",
+      "description": "Representa um bem ou item dentro de uma sala.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Asset entity. This should be an alphanumeric ID reflecting the asset's location."
+          "description": "Identificador único para a entidade Patrimônio. Deve ser um ID alfanumérico refletindo a localização do ativo."
         },
         "name": {
           "type": "string",
-          "description": "The name of the asset."
+          "description": "O nome do patrimônio."
         },
-        "salaId": {
+        "roomId": {
           "type": "string",
-          "description": "Reference to Room. (Relationship: Room 1:N Asset)"
+          "description": "Referência à Sala. (Relação: Sala 1:N Patrimonio)"
         }
       },
       "required": [
         "id",
         "name",
-        "salaId"
+        "roomId"
       ]
     },
     "Movement": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Movement",
+      "title": "Movimentacao",
       "type": "object",
-      "description": "Represents a log of an asset's movement or change history.",
+      "description": "Representa um registro de movimentação ou histórico de alterações de um patrimônio.",
       "properties": {
         "assetId": {
           "type": "string",
-          "description": "The ID of the asset that was moved or changed."
+          "description": "O ID do patrimônio que foi movido ou alterado."
         },
         "assetName": {
             "type": "string",
-            "description": "The name of the asset at the time of movement."
+            "description": "O nome do patrimônio no momento da movimentação."
         },
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "The timestamp of when the movement occurred."
+          "description": "O carimbo de data/hora de quando a movimentação ocorreu."
         },
         "action": {
           "type": "string",
-          "description": "The type of action that occurred.",
+          "description": "O tipo de ação que ocorreu.",
           "enum": ["Criado", "Status Alterado", "Movido", "Nome Alterado"]
         },
         "from": {
           "type": "string",
-          "description": "The state or location before the change."
+          "description": "O estado ou localização antes da alteração."
         },
         "to": {
           "type": "string",
-          "description": "The state or location after the change."
+          "description": "O estado ou localização após a alteração."
         }
       },
       "required": ["assetId", "assetName", "timestamp", "action", "from", "to"]
@@ -141,90 +141,90 @@
   "firestore": {
     "structure": [
       {
-        "path": "/blocks/{blockId}",
+        "path": "/blocos/{blocoId}",
         "definition": {
-          "entityName": "Block",
+          "entityName": "Bloco",
           "schema": {
             "$ref": "#/backend/entities/Block"
           },
-          "description": "Stores block data. The 'blockId' is a unique identifier for each block.",
+          "description": "Armazena dados do bloco. O 'blocoId' é um identificador único para cada bloco.",
           "params": [
             {
-              "name": "blockId",
-              "description": "Unique identifier for the block."
+              "name": "blocoId",
+              "description": "Identificador único para o bloco."
             }
           ]
         }
       },
       {
-        "path": "/sectors/{sectorId}",
+        "path": "/setores/{setorId}",
         "definition": {
-          "entityName": "Sector",
+          "entityName": "Setor",
           "schema": {
             "$ref": "#/backend/entities/Sector"
           },
-          "description": "Stores sector data. The 'sectorId' is a unique identifier for each sector.",
+          "description": "Armazena dados do setor. O 'setorId' é um identificador único para cada setor.",
           "params": [
             {
-              "name": "sectorId",
-              "description": "Unique identifier for the sector."
+              "name": "setorId",
+              "description": "Identificador único para o setor."
             }
           ]
         }
       },
       {
-        "path": "/rooms/{roomId}",
+        "path": "/salas/{salaId}",
         "definition": {
-          "entityName": "Room",
+          "entityName": "Sala",
           "schema": {
             "$ref": "#/backend/entities/Room"
           },
-          "description": "Stores room data. The 'roomId' is a unique identifier for each room.",
+          "description": "Armazena dados da sala. O 'salaId' é um identificador único para cada sala.",
           "params": [
             {
-              "name": "roomId",
-              "description": "Unique identifier for the room."
+              "name": "salaId",
+              "description": "Identificador único para a sala."
             }
           ]
         }
       },
       {
-        "path": "/assets/{assetId}",
+        "path": "/patrimonios/{patrimonioId}",
         "definition": {
-          "entityName": "Asset",
+          "entityName": "Patrimonio",
           "schema": {
             "$ref": "#/backend/entities/Asset"
           },
-          "description": "Stores asset data. The 'assetId' is a unique identifier for each asset.",
+          "description": "Armazena dados do patrimônio. O 'patrimonioId' é um identificador único para cada patrimônio.",
           "params": [
             {
-              "name": "assetId",
-              "description": "Unique identifier for the asset."
+              "name": "patrimonioId",
+              "description": "Identificador único para o patrimônio."
             }
           ]
         }
       },
       {
-        "path": "/assets/{assetId}/movements/{movementId}",
+        "path": "/patrimonios/{patrimonioId}/movimentacoes/{movimentacaoId}",
         "definition": {
-          "entityName": "Movement",
+          "entityName": "Movimentacao",
           "schema": {
             "$ref": "#/backend/entities/Movement"
           },
-          "description": "Stores the history of a specific asset's movements and changes as a nested subcollection.",
+          "description": "Armazena o histórico de movimentações e alterações de um patrimônio específico como uma subcoleção aninhada.",
           "params": [
             {
-              "name": "assetId",
-              "description": "The ID of the asset being tracked."
+              "name": "patrimonioId",
+              "description": "O ID do patrimônio que está sendo rastreado."
             },
             {
-              "name": "movementId",
-              "description": "Unique identifier for the movement log entry."
+              "name": "movimentacaoId",
+              "description": "Identificador único para a entrada de log de movimentação."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is refactored to be more secure and efficient. The 'movements' are no longer a top-level collection but are now a subcollection nested within each 'asset' document. This hierarchical structure (/assets/{assetId}/movements/{movementId}) simplifies security rules, as access to an asset's history is inherently tied to access to the asset itself. This eliminates the need for complex global queries on the movements collection, which was causing permission errors. All other entities (Blocks, Sectors, Rooms, Assets) remain in their own top-level collections for simplicity and scalability."
+    "reasoning": "A estrutura do Firestore foi refatorada para ser mais segura e eficiente. As 'movimentacoes' não são mais uma coleção de nível superior, mas agora uma subcoleção aninhada dentro de cada documento 'patrimonio'. Essa estrutura hierárquica (/patrimonios/{patrimonioId}/movimentacoes/{movimentacaoId}) simplifica as regras de segurança, pois o acesso ao histórico de um patrimônio está inerentemente ligado ao acesso ao próprio patrimônio. Isso elimina a necessidade de consultas globais complexas na coleção de movimentações, que estava causando erros de permissão. Todas as outras entidades (Blocos, Setores, Salas, Patrimonios) permanecem em suas próprias coleções de nível superior para simplicidade e escalabilidade."
   }
 }
