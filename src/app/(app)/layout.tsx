@@ -57,9 +57,12 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
-            <div className="flex items-center gap-2 p-2">
-              <Building className="h-6 w-6 text-primary" />
-              <span className="font-semibold text-lg">KeepInventory</span>
+            <div className="flex items-center gap-3 p-2">
+              <Building className="h-8 w-8 text-primary" />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl text-primary">UNIVAG</span>
+                <span className="text-xs text-muted-foreground -mt-1">SGP</span>
+              </div>
             </div>
           </SidebarHeader>
           <SidebarContent>
