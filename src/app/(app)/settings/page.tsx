@@ -1,7 +1,6 @@
-
 'use client';
 
-import { AlertCircle, Palette, User, ShieldAlert, Warehouse, Building2, DoorOpen } from 'lucide-react';
+import { AlertCircle, Palette, User, ShieldAlert, Building, Building2, DoorOpen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
