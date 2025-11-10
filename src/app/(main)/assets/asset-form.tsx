@@ -65,6 +65,8 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
         if (sector) {
           setSelectedBlock(sector.blockId);
           setSelectedSector(sector.id);
+          setAvailableSectors(allSectors.filter(s => s.blockId === sector.blockId));
+          setAvailableRooms(allRooms.filter(r => r.sectorId === sector.id));
           form.setValue('roomId', room.id);
         }
       }
@@ -73,39 +75,32 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
 
   // Effect to update available sectors when block changes
   useEffect(() => {
-    if (selectedBlock) {
+    if (selectedBlock && !isEditing) {
       setAvailableSectors(allSectors.filter(s => s.blockId === selectedBlock));
-      if (!isEditing) {
-        setSelectedSector(null);
-        form.setValue('roomId', '');
-      }
-    } else {
-      setAvailableSectors([]);
+      setSelectedSector(null);
+      form.setValue('roomId', '');
     }
   }, [selectedBlock, allSectors, form, isEditing]);
   
   // Effect to update available rooms when sector changes
   useEffect(() => {
-    if (selectedSector) {
+    if (selectedSector && !isEditing) {
       setAvailableRooms(allRooms.filter(r => r.sectorId === selectedSector));
-       if (!isEditing) {
-         form.setValue('roomId', '');
-       }
-    } else {
-      setAvailableRooms([]);
+       form.setValue('roomId', '');
     }
   }, [selectedSector, allRooms, form, isEditing]);
 
 
   const handleBlockChange = (blockId: string) => {
-    setSelectedBlock(blockId);
-    setSelectedSector(null);
-    form.setValue('roomId', '');
+    if (!isEditing) {
+        setSelectedBlock(blockId);
+    }
   }
 
   const handleSectorChange = (sectorId: string) => {
-    setSelectedSector(sectorId);
-    form.setValue('roomId', '');
+    if (!isEditing) {
+        setSelectedSector(sectorId);
+    }
   }
 
   return (
@@ -153,10 +148,10 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
         <div className="space-y-4">
              <FormItem>
               <FormLabel>Bloco</FormLabel>
-              <Select onValueChange={handleBlockChange} value={selectedBlock ?? undefined} disabled={isEditing}>
+              <Select onValueChange={handleBlockChange} value={selectedBlock ?? ""} disabled={isEditing}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isEditing && selectedBlock ? blocks.find(b=>b.id === selectedBlock)?.name : 'Selecione um bloco'} />
+                    <SelectValue placeholder={isEditing ? blocks.find(b => b.id === selectedBlock)?.name : 'Selecione um bloco'} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -171,10 +166,10 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
 
             <FormItem>
               <FormLabel>Setor</FormLabel>
-              <Select onValueChange={handleSectorChange} value={selectedSector ?? undefined} disabled={!selectedBlock || isEditing}>
+              <Select onValueChange={handleSectorChange} value={selectedSector ?? ""} disabled={isEditing || !selectedBlock}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isEditing && selectedSector ? allSectors.find(s=>s.id === selectedSector)?.name : 'Selecione um setor'} />
+                    <SelectValue placeholder={isEditing ? allSectors.find(s => s.id === selectedSector)?.name : 'Selecione um setor'} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -193,10 +188,10 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Sala</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedSector || isEditing}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isEditing || !selectedSector}>
                     <FormControl>
                     <SelectTrigger>
-                        <SelectValue placeholder={isEditing && field.value ? allRooms.find(r=>r.id === field.value)?.name : 'Selecione uma sala'} />
+                        <SelectValue placeholder={isEditing ? allRooms.find(r => r.id === field.value)?.name : 'Selecione uma sala'} />
                     </SelectTrigger>
                     </FormControl>
                     <SelectContent>
