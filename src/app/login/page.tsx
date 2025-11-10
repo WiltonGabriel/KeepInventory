@@ -16,37 +16,33 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Building, Terminal } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FirebaseClientProvider, initializeFirebase, useUser } from "@/firebase";
+import { initializeFirebase, useUser } from "@/firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   Auth,
-  onAuthStateChanged,
 } from "firebase/auth";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 
 function LoginPageContent() {
   const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const [auth, setAuth] = useState<Auth | null>(null);
   const [email, setEmail] = useState("admin@univag.com.br");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const { user, isUserLoading } = useUser();
+  const [auth, setAuth] = useState<Auth | null>(null);
+
   useEffect(() => {
+    // This effect now ONLY initializes firebase auth and checks for an existing user.
+    // It prevents rendering the form until we know if a user is already signed in.
     const { auth: firebaseAuth } = initializeFirebase();
     setAuth(firebaseAuth);
-
-    // If a user is already authenticated when the page loads, redirect them away.
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-      if (user) {
-        router.replace("/dashboard");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
 
   const handleLogin = async () => {
@@ -62,27 +58,25 @@ function LoginPageContent() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The onAuthStateChanged listener will handle the redirection.
+      router.replace('/dashboard'); // Explicit redirect on success
     } catch (e: any) {
       if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, email, password);
-           // The onAuthStateChanged listener will handle the redirection.
+           router.replace('/dashboard'); // Explicit redirect on success
         } catch (creationError: any) {
           setError(creationError.message);
+          setIsLoading(false);
         }
       } else {
         setError(e.message);
-      }
-    } finally {
-      // Don't set loading to false immediately, to allow time for redirect
-      // It will be set to false if an error occurs.
-      if (error) {
         setIsLoading(false);
       }
     }
+    // No 'finally' block that sets loading to false, to allow time for redirect.
   };
-
+  
+  // Show loader while checking auth state or if a user is found and we are about to redirect.
   if (isUserLoading || user) {
      return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -105,6 +99,7 @@ function LoginPageContent() {
     );
   }
 
+  // If loading is done and no user, show the login form.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm relative">
