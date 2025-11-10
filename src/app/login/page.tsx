@@ -14,61 +14,50 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Building } from "lucide-react";
+import { Building, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { useAuth } from "@/firebase";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const auth = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@univag.com.br");
+  const [password, setPassword] = useState("123456");
   const [error, setError] = useState<string | null>(null);
 
-  const performLogin = () => {
-     if (typeof window !== "undefined") {
-        const user = { name: "Administrador", email: "admin@univag.com.br", role: "Admin" };
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("user", JSON.stringify(user));
-        // Dispara um evento para notificar outras abas/janelas e o próprio layout
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'true' }));
-        router.replace("/dashboard");
-      }
-  }
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError(null);
-
     if (!email || !password) {
       setError("Por favor, preencha o e-mail e a senha corretamente.");
       return;
     }
-    
-    if (password.length < 6) {
-        setError("A senha deve ter pelo menos 6 caracteres.");
-        return;
-    }
-
-    if (email.toLowerCase() === "admin@univag.com.br" && password === "123456") {
-      performLogin();
-    } else {
-      setError("E-mail ou senha incorreta.");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/dashboard");
+    } catch (e: any) {
+      if (e.code === 'auth/user-not-found') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          router.replace("/dashboard");
+        } catch (e: any) {
+          setError(e.message);
+        }
+      } else {
+        setError(e.message);
+      }
     }
   };
-
-  const handleBypassLogin = () => {
-    performLogin();
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-primary">
       <Card className="w-full max-w-sm relative">
-        <button 
-            onClick={handleBypassLogin}
-            className="absolute top-0 right-0 w-12 h-12 bg-transparent z-10"
-            aria-label="Bypass login"
-        ></button>
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
              <Building className="h-8 w-8 text-primary" />
@@ -119,4 +108,12 @@ export default function LoginPage() {
       </Card>
     </div>
   );
+}
+
+export default function LoginPage() {
+    return (
+        <FirebaseClientProvider>
+            <LoginPageContent />
+        </FirebaseClientProvider>
+    )
 }

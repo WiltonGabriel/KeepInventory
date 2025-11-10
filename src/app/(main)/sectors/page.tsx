@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { inventoryService } from "@/lib/data";
 import { Sector, Block } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
@@ -23,8 +22,9 @@ export default function SectorsPage() {
   const { toast } = useToast();
 
   const loadData = () => {
-    setSectors(inventoryService.getAll("sectors") as Sector[]);
-    setBlocks(inventoryService.getAll("blocks") as Block[]);
+    // TODO: Migrate to Firestore
+    setSectors([]);
+    setBlocks([]);
   };
 
   useEffect(() => {
@@ -42,17 +42,17 @@ export default function SectorsPage() {
   };
   
   const handleDelete = (id: string) => {
-    inventoryService.delete("sectors", id);
+    // TODO: Migrate to Firestore
     loadData();
     toast({ title: "Setor removido", description: "O setor e seus itens associados foram removidos." });
   };
 
   const handleFormSubmit = (values: Omit<Sector, 'id'>) => {
     if (editingSector) {
-      inventoryService.update("sectors", { ...editingSector, ...values });
+      // TODO: Migrate to Firestore
       toast({ title: "Setor atualizado", description: "As informações do setor foram salvas." });
     } else {
-      inventoryService.add("sectors", values);
+      // TODO: Migrate to Firestore
       toast({ title: "Setor adicionado", description: "Um novo setor foi criado com sucesso." });
     }
     loadData();
@@ -145,7 +145,7 @@ export default function SectorsPage() {
       <DataTable
         columns={columns}
         data={filteredSectors}
-        emptyStateMessage="Nenhum setor encontrado."
+        emptyStateMessage="Carregando..."
       />
     </div>
   );

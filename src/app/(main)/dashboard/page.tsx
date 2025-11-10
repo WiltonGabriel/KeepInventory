@@ -1,9 +1,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { inventoryService } from "@/lib/data";
-import { Block, UserProfile } from "@/lib/types";
+import { useEffect, useState, useMemo } from "react";
+import { Block, UserProfile, Sector, Room, Asset } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Archive, Building, DoorOpen, Building2, BarChart3, History, CheckCircle } from "lucide-react";
+import { useUser, useCollection, useFirestore } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
 
 type Stats = {
   assetCount: number;
@@ -22,35 +23,38 @@ type Stats = {
 };
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats>({ assetCount: 0, activeAssetCount: 0, roomCount: 0, sectorCount: 0 });
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [user, setUser] = useState<UserProfile | null>(null);
+    const firestore = useFirestore();
+    const { user } = useUser();
 
-  useEffect(() => {
-    // Esta função será chamada sempre que a página do dashboard for carregada/recarregada.
-    // Isso garante que os dados exibidos estejam sempre atualizados.
-    setStats(inventoryService.getStats());
-    setBlocks(inventoryService.getAll("blocks") as Block[]);
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+    const { data: assets } = useCollection<Asset>(useMemo(() => collection(firestore, 'assets'), [firestore]));
+    const { data: rooms } = useCollection<Room>(useMemo(() => collection(firestore, 'rooms'), [firestore]));
+    const { data: sectors } = useCollection<Sector>(useMemo(() => collection(firestore, 'sectors'), [firestore]));
+    const { data: blocks } = useCollection<Block>(useMemo(() => collection(firestore, 'blocks'), [firestore]));
+
+
+  const stats: Stats = useMemo(() => {
+    const assetCount = assets?.length || 0;
+    const activeAssetCount = assets?.filter(a => a.status === 'Em Uso').length || 0;
+    const roomCount = rooms?.length || 0;
+    const sectorCount = sectors?.length || 0;
+    return { assetCount, activeAssetCount, roomCount, sectorCount };
+    }, [assets, rooms, sectors]);
+
 
   const getSectorsForBlock = (blockId: string) => {
-    return inventoryService.getSectorsByBlockId(blockId);
+    return sectors?.filter(s => s.blockId === blockId) || [];
   };
   const getRoomsForSector = (sectorId: string) => {
-    return inventoryService.getRoomsBySectorId(sectorId);
+    return rooms?.filter(r => r.sectorId === sectorId) || [];
   };
   const getAssetsForRoom = (roomId: string) => {
-    return inventoryService.getAssetsByRoomId(roomId);
+    return assets?.filter(a => a.roomId === roomId) || [];
   };
 
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        {user ? `Olá, ${user.name}!` : "Tela inicial"}
+        {user ? `Olá, ${user.displayName}!` : "Tela inicial"}
       </h1>
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -113,7 +117,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Accordion type="multiple" className="w-full">
-                {blocks.map((block) => (
+                {blocks?.map((block) => (
                   <AccordionItem value={`block-${block.id}`} key={block.id}>
                     <AccordionTrigger className="font-medium text-lg">
                       <div className="flex items-center gap-2">

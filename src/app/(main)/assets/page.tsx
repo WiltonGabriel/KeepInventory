@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { inventoryService } from "@/lib/data";
 import { Asset, Room, Sector, Block, AssetStatus } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
@@ -25,10 +24,11 @@ export default function AssetsPage() {
   const { toast } = useToast();
 
   const loadData = () => {
-    setAssets(inventoryService.getAll("assets") as Asset[]);
-    setRooms(inventoryService.getAll("rooms") as Room[]);
-    setSectors(inventoryService.getAll("sectors") as Sector[]);
-    setBlocks(inventoryService.getAll("blocks") as Block[]);
+    // TODO: Migrate to Firestore
+    setAssets([]);
+    setRooms([]);
+    setSectors([]);
+    setBlocks([]);
   };
 
   useEffect(() => {
@@ -46,21 +46,17 @@ export default function AssetsPage() {
   };
 
   const handleDelete = (id: string) => {
-    inventoryService.delete("assets", id);
+    // TODO: Migrate to Firestore
     loadData();
     toast({ title: "Patrimônio removido", description: "O item foi removido com sucesso." });
   };
 
   const handleFormSubmit = (values: Omit<Asset, 'id'>) => {
     if (editingAsset) {
-      // The ID is generated based on location, so it might change on edit. 
-      // A simple update is tricky. Let's delete and re-add.
-      // For a real app, we'd have stable IDs.
-      inventoryService.delete("assets", editingAsset.id);
-      inventoryService.add("assets", values);
+      // TODO: Migrate to Firestore
       toast({ title: "Patrimônio atualizado", description: "As informações do item foram salvas." });
     } else {
-      inventoryService.add("assets", values);
+      // TODO: Migrate to Firestore
       toast({ title: "Patrimônio adicionado", description: "Um novo item foi criado com sucesso." });
     }
     loadData();
@@ -184,10 +180,8 @@ export default function AssetsPage() {
       <DataTable
         columns={columns}
         data={filteredAssets}
-        emptyStateMessage="Nenhum patrimônio encontrado."
+        emptyStateMessage="Carregando..."
       />
     </div>
   );
 }
-
-    

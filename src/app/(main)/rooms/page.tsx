@@ -1,7 +1,7 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { inventoryService } from "@/lib/data";
 import { Room, Sector, Block } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
@@ -22,9 +22,10 @@ export default function RoomsPage() {
   const { toast } = useToast();
 
   const loadData = () => {
-    setRooms(inventoryService.getAll("rooms") as Room[]);
-    setSectors(inventoryService.getAll("sectors") as Sector[]);
-    setBlocks(inventoryService.getAll("blocks") as Block[]);
+    // TODO: Migrate to Firestore
+    setRooms([]);
+    setSectors([]);
+    setBlocks([]);
   };
 
   useEffect(() => {
@@ -42,17 +43,17 @@ export default function RoomsPage() {
   };
   
   const handleDelete = (id: string) => {
-    inventoryService.delete("rooms", id);
+    // TODO: Migrate to Firestore
     loadData();
     toast({ title: "Sala removida", description: "A sala e seus itens associados foram removidos." });
   };
 
   const handleFormSubmit = (values: Omit<Room, 'id'>) => {
     if (editingRoom) {
-      inventoryService.update("rooms", { ...editingRoom, ...values });
+      // TODO: Migrate to Firestore
       toast({ title: "Sala atualizada", description: "As informações da sala foram salvas." });
     } else {
-      inventoryService.add("rooms", values);
+      // TODO: Migrate to Firestore
       toast({ title: "Sala adicionada", description: "Uma nova sala foi criada com sucesso." });
     }
     loadData();
@@ -141,7 +142,7 @@ export default function RoomsPage() {
       <DataTable
         columns={columns}
         data={filteredRooms}
-        emptyStateMessage="Nenhuma sala encontrada."
+        emptyStateMessage="Carregando..."
       />
     </div>
   );

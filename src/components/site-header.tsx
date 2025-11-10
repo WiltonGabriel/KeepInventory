@@ -15,31 +15,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { UserProfile } from "@/lib/types";
+import { useAuth, useUser } from "@/firebase";
 
 
 export function SiteHeader() {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  const auth = useAuth();
+  const { user } = useUser();
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
-    // Dispara um evento para notificar outras abas/janelas e o próprio layout
-    window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'false' }));
+    auth.signOut();
     router.replace("/login");
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
@@ -62,14 +53,14 @@ export function SiteHeader() {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-9 w-9">
-                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                        <AvatarFallback>{getInitials(user.displayName || user.email)}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-sm font-medium leading-none">{user.displayName || 'Usuário'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                             {user.email}
                         </p>
@@ -78,7 +69,7 @@ export function SiteHeader() {
                  <DropdownMenuSeparator />
                  <DropdownMenuItem disabled>
                     <User className="mr-2 h-4 w-4" />
-                    <span>{user.role}</span>
+                    <span>Admin</span>
                  </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

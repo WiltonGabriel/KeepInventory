@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -13,47 +14,25 @@ import {
 import { Building } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { MainNav } from "@/components/main-nav";
-import { inventoryService } from "@/lib/data";
+import { useUser } from "@/firebase";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
-export default function MainLayout({
+function MainLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, isUserLoading } = useUser();
+
 
   useEffect(() => {
-    // Função para verificar o status de login
-    const checkAuth = () => {
-      const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-      if (loggedIn) {
-        inventoryService.initialize();
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
+    if (!isUserLoading && !user) {
         router.replace("/login");
-      }
-    };
+    }
+  }, [isUserLoading, user, router]);
 
-    checkAuth();
-
-    // Adiciona um listener para o evento 'storage' que é disparado da página de login
-    const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === "isLoggedIn") {
-            checkAuth();
-        }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-        window.removeEventListener('storage', handleStorageChange);
-    };
-
-  }, [router]);
-
-  if (isAuthenticated === null) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="loader"></div>
@@ -73,11 +52,6 @@ export default function MainLayout({
         `}</style>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    // Não renderiza nada enquanto redireciona
-    return null;
   }
 
   return (
@@ -102,4 +76,17 @@ export default function MainLayout({
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <FirebaseClientProvider>
+      <MainLayoutContent>{children}</MainLayoutContent>
+    </FirebaseClientProvider>
+  )
 }

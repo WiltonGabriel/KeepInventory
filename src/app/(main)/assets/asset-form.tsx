@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { Block, Sector, Room, Asset, assetStatusOptions, AssetStatus } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { inventoryService } from "@/lib/data";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
@@ -205,5 +204,3 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
     </Form>
   );
 }
-
-    
