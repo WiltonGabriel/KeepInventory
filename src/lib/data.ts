@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Block, Sector, Room, Asset, Entity, EntityType } from './types';
+import { Block, Sector, Room, Asset, Entity, EntityType, AssetStatus } from './types';
 
 const KEYS = {
   BLOCKS: 'inventory_blocks',
@@ -46,6 +46,8 @@ const seedData = () => {
     // Bloco B - Acadêmico
     { id: 'sector-humanas', name: 'Ciências Humanas', abbreviation: 'HUM', blockId: 'block-b' },
     { id: 'sector-exatas', name: 'Ciências Exatas', abbreviation: 'EXA', blockId: 'block-b' },
+    { id: 'sector-acad-b', name: 'Acadêmico Geral B', abbreviation: 'ACB', blockId: 'block-b' },
+
 
     // Bloco C - Laboratórios & Acadêmico
     { id: 'sector-labinfo', name: 'Laboratórios de Informática', abbreviation: 'LINFO', blockId: 'block-c' },
@@ -92,7 +94,7 @@ const seedData = () => {
   saveToStorage(KEYS.ROOMS, rooms);
 
   let assets: Asset[] = [];
-  const addAsset = (name: string, roomId: string) => {
+  const addAsset = (name: string, roomId: string, status: AssetStatus = "Em Uso") => {
     const room = rooms.find(r => r.id === roomId);
     if (!room) return;
     const sector = sectors.find(s => s.id === room.sectorId);
@@ -101,21 +103,21 @@ const seedData = () => {
     const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
     //PAT<SIGLA_SETOR><NUMERO_SALA><SEQUENCIAL>
     const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
-    assets.push({ id: newId, name, roomId });
+    assets.push({ id: newId, name, roomId, status });
   }
 
   // Assets no Bloco A (Administrativo)
-  addAsset('Cadeira de Escritório', 'room-a101');
-  addAsset('Monitor Dell 24"', 'room-a101');
-  addAsset('Servidor de Rede', 'room-a102');
-  addAsset('Impressora Multifuncional', 'room-a103');
+  addAsset('Cadeira de Escritório', 'room-a101', 'Em Uso');
+  addAsset('Monitor Dell 24"', 'room-a101', 'Em Uso');
+  addAsset('Servidor de Rede', 'room-a102', 'Guardado');
+  addAsset('Impressora Multifuncional', 'room-a103', 'Em Uso');
   
   // Assets no Bloco C (Laboratórios)
-  addAsset('Computador i7 16GB RAM', 'room-c101');
-  addAsset('Projetor Epson PowerLite', 'room-c101');
-  addAsset('Esqueleto Humano', 'room-c201');
-  addAsset('Microscópio Óptico', 'room-c202');
-  addAsset('Lousa Digital', 'room-c301');
+  addAsset('Computador i7 16GB RAM', 'room-c101', 'Em Uso');
+  addAsset('Projetor Epson PowerLite', 'room-c101', 'Em Uso');
+  addAsset('Esqueleto Humano', 'room-c201', 'Guardado');
+  addAsset('Microscópio Óptico', 'room-c202', 'Desconhecido');
+  addAsset('Lousa Digital', 'room-c301', 'Perdido');
 
   // Assets no Bloco D (Acadêmico)
   addAsset('Mesa de Aluno', 'room-d101');
@@ -152,7 +154,7 @@ export const inventoryService = {
       const assetsInRoom = inventoryService.getAssetsByRoomId(room.id);
       const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
       const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
-      newItem = { ...item, id: newId } as Asset;
+      newItem = { ...assetData, id: newId, status: assetData.status || "Em Uso" } as Asset;
     } else {
        const prefix = entityType.slice(0, -1);
        newItem = { ...item, id: generateId(prefix) } as Entity;

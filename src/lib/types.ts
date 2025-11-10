@@ -17,10 +17,15 @@ export interface Room {
   sectorId: string;
 }
 
+export type AssetStatus = "Em Uso" | "Guardado" | "Desconhecido" | "Perdido";
+
+export const assetStatusOptions: AssetStatus[] = ["Em Uso", "Guardado", "Desconhecido", "Perdido"];
+
 export interface Asset {
   id: string;
   name: string;
   roomId: string;
+  status: AssetStatus;
 }
 
 export interface UserProfile {

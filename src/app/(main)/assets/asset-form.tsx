@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,13 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Block, Sector, Room, Asset } from "@/lib/types";
+import { Block, Sector, Room, Asset, assetStatusOptions, AssetStatus } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { inventoryService } from "@/lib/data";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
   roomId: z.string({ required_error: "Selecione uma sala." }),
+  status: z.enum(assetStatusOptions, { required_error: "Selecione um status." }),
 });
 
 type AssetFormProps = {
@@ -44,7 +46,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", roomId: "", ...defaultValues },
+    defaultValues: { name: "", roomId: "", status: "Em Uso", ...defaultValues },
   });
 
   useEffect(() => {
@@ -105,6 +107,31 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
               <FormControl>
                 <Input placeholder="Ex: Cadeira Gamer" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {assetStatusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

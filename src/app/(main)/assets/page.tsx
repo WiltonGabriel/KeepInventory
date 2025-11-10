@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { inventoryService } from "@/lib/data";
-import { Asset, Room, Sector, Block } from "@/lib/types";
+import { Asset, Room, Sector, Block, AssetStatus } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { AssetForm } from "./asset-form";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -83,6 +85,20 @@ export default function AssetsPage() {
     );
   }, [assets, searchQuery, rooms, sectors, blocks]);
 
+  const getStatusVariant = (status: AssetStatus) => {
+    switch (status) {
+      case "Em Uso":
+        return "default";
+      case "Guardado":
+        return "secondary";
+      case "Perdido":
+        return "destructive";
+      case "Desconhecido":
+      default:
+        return "outline";
+    }
+  };
+
   const columns = [
     {
       accessorKey: "id",
@@ -93,6 +109,13 @@ export default function AssetsPage() {
       accessorKey: "name",
       header: "Nome",
       cell: (item: Asset) => item.name,
+    },
+     {
+      accessorKey: "status",
+      header: "Status",
+      cell: (item: Asset) => (
+        <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+      ),
     },
     {
       accessorKey: "location",
