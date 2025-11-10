@@ -65,22 +65,19 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
       if (room) {
         const sector = allSectors.find(s => s.id === room.sectorId);
         if (sector) {
-          const block = blocks.find(b => b.id === sector.blockId);
-          if (block) {
-            // Seta os valores no formulário para preencher os selects
-            // Usamos reset para atualizar o estado inicial do formulário no modo de edição
-            form.reset({
-              name: defaultValues.name || "",
-              status: defaultValues.status || "Em Uso",
-              blockId: block.id,
-              sectorId: sector.id,
-              roomId: room.id,
-            });
-          }
+          // Seta os valores no formulário para preencher os selects
+          // Usamos reset para atualizar o estado inicial do formulário no modo de edição
+          form.reset({
+            name: defaultValues.name || "",
+            status: defaultValues.status || "Em Uso",
+            blockId: sector.blockId,
+            sectorId: sector.id,
+            roomId: room.id,
+          });
         }
       }
     }
-  }, [defaultValues, allRooms, allSectors, blocks, form.reset, form]);
+  }, [defaultValues, allRooms, allSectors, blocks, form]);
   
   const watchedBlockId = form.watch("blockId");
   const watchedSectorId = form.watch("sectorId");
