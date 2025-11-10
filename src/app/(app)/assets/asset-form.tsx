@@ -205,7 +205,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                       <FormControl>
                       <SelectTrigger>
                           <SelectValue placeholder={!watchedSectorId ? 'Selecione um setor primeiro' : 'Selecione uma sala'} />
-                      </Trigger>
+                      </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                       {availableRooms.map((room) => (
