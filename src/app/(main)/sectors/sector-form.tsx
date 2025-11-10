@@ -34,6 +34,8 @@ type SectorFormProps = {
 };
 
 export function SectorForm({ onSubmit, defaultValues, blocks }: SectorFormProps) {
+  const isEditing = !!defaultValues;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", abbreviation: "", blockId: "", ...defaultValues },
