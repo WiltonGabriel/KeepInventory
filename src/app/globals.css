@@ -22,11 +22,11 @@
     --primary: var(--primary-light);
     --primary-foreground: 0 0% 98%;
     
-    /* Secundária e Accent serão derivadas da cor primária */
-    --secondary: var(--primary);
-    --secondary-foreground: var(--primary-foreground);
-    --accent: var(--primary);
-    --accent-foreground: var(--primary-foreground);
+    /* Secundária e Accent serão derivadas da cor primária para maior coesão */
+    --secondary: hsl(var(--primary));
+    --secondary-foreground: hsl(var(--primary-foreground));
+    --accent: hsl(var(--primary));
+    --accent-foreground: hsl(var(--primary-foreground));
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -55,10 +55,10 @@
     --primary-foreground: 206 100% 10%;
 
     /* Secundária e Accent derivadas da cor primária no modo escuro */
-    --secondary: var(--primary);
-    --secondary-foreground: var(--primary-foreground);
-    --accent: var(--primary);
-    --accent-foreground: 0 0% 98%;
+    --secondary: hsl(var(--primary));
+    --secondary-foreground: hsl(var(--primary-foreground));
+    --accent: hsl(var(--primary));
+    --accent-foreground: hsl(var(--primary-foreground));
 
     --muted: 220 10% 15%;
     --muted-foreground: 220 10% 45%;
