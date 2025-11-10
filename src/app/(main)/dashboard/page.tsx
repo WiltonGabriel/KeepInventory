@@ -64,7 +64,7 @@ export default function DashboardPage() {
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="hierarchy">Explorar Hierarquia</TabsTrigger>
-          <TabsTrigger value="activity">Últimas Movimentações</TabsTrigger>
+          <TabsTrigger value="charts">Gráficos</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -100,17 +100,17 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
           </div>
-          <Card className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[300px]">
-            <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
-              <BarChart3 className="h-16 w-16 text-muted-foreground" />
-              <h3 className="text-2xl font-bold tracking-tight">
-                Gráficos em Breve
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Esta área exibirá gráficos e visualizações sobre o inventário.
-              </p>
-            </CardContent>
-          </Card>
+           <Card className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[400px]">
+                <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
+                <History className="h-16 w-16 text-muted-foreground" />
+                <h3 className="text-2xl font-bold tracking-tight">
+                    Log de Movimentações
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                    Esta seção está em desenvolvimento. Em breve, você poderá visualizar o histórico de alterações e movimentações dos patrimônios.
+                </p>
+                </CardContent>
+            </Card>
         </TabsContent>
 
         <TabsContent value="hierarchy">
@@ -173,15 +173,15 @@ export default function DashboardPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="activity">
-            <Card className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[400px]">
+        <TabsContent value="charts">
+             <Card className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[300px]">
                 <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
-                <History className="h-16 w-16 text-muted-foreground" />
+                <BarChart3 className="h-16 w-16 text-muted-foreground" />
                 <h3 className="text-2xl font-bold tracking-tight">
-                    Log de Movimentações
+                    Gráficos em Breve
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                    Esta seção está em desenvolvimento. Em breve, você poderá visualizar o histórico de alterações e movimentações dos patrimônios.
+                    Esta área exibirá gráficos e visualizações sobre o inventário.
                 </p>
                 </CardContent>
             </Card>
