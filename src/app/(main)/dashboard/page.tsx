@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Archive, Building, DoorOpen, Building2, BarChart3, History, CheckCircle } from "lucide-react";
-import { useUser, useCollection, useFirestore } from "@/firebase";
+import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 
 type Stats = {
@@ -26,10 +26,15 @@ export default function DashboardPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const { data: assets } = useCollection<Asset>(useMemo(() => collection(firestore, 'assets'), [firestore]));
-    const { data: rooms } = useCollection<Room>(useMemo(() => collection(firestore, 'rooms'), [firestore]));
-    const { data: sectors } = useCollection<Sector>(useMemo(() => collection(firestore, 'sectors'), [firestore]));
-    const { data: blocks } = useCollection<Block>(useMemo(() => collection(firestore, 'blocks'), [firestore]));
+    const assetsCollection = useMemoFirebase(() => collection(firestore, 'assets'), [firestore]);
+    const roomsCollection = useMemoFirebase(() => collection(firestore, 'rooms'), [firestore]);
+    const sectorsCollection = useMemoFirebase(() => collection(firestore, 'sectors'), [firestore]);
+    const blocksCollection = useMemoFirebase(() => collection(firestore, 'blocks'), [firestore]);
+
+    const { data: assets } = useCollection<Asset>(assetsCollection);
+    const { data: rooms } = useCollection<Room>(roomsCollection);
+    const { data: sectors } = useCollection<Sector>(sectorsCollection);
+    const { data: blocks } = useCollection<Block>(blocksCollection);
 
 
   const stats: Stats = useMemo(() => {
