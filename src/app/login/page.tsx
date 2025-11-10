@@ -62,7 +62,7 @@ function LoginPageContent() {
           <div className="flex justify-center items-center mb-4">
              <Building className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">KeepInventory</CardTitle>
+          <CardTitle className="text-4xl font-bold text-primary">UNIVAG</CardTitle>
           <CardDescription>
             Sistema de Gestão Patrimonial (SGP)
           </CardDescription>
@@ -100,10 +100,13 @@ function LoginPageContent() {
             />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex-col gap-4">
           <Button className="w-full" onClick={handleLogin}>
             Entrar
           </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            KeepInventory
+          </p>
         </CardFooter>
       </Card>
     </div>
