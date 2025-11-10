@@ -1,0 +1,67 @@
+
+/**
+ * @fileoverview Firestore Security Rules for the inventory system.
+ *
+ * Core Philosophy:
+ * This ruleset allows read and write access to any authenticated user for the main data collections.
+ * The key change is that the `movements` log is now a subcollection of each `asset`.
+ * This simplifies security, as access to an asset's history is controlled by the rules for that asset.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Grants read and write access to any authenticated user for blocks.
+     */
+    match /blocks/{blockId} {
+      allow read, write: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for sectors.
+     */
+    match /sectors/{sectorId} {
+      allow read, write: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for rooms.
+     */
+    match /rooms/{roomId} {
+      allow read, write: if isSignedIn();
+    }
+
+    /**
+     * @description Grants read and write access to any authenticated user for assets.
+     * This rule implicitly governs access to the nested 'movements' subcollection.
+     */
+    match /assets/{assetId} {
+      allow read, write: if isSignedIn();
+      
+      /**
+       * @description Manages access to the nested movements subcollection.
+       * Allows read, create, and delete for authenticated users, aligning with the parent asset's permissions.
+       * Prevents modification of existing logs to ensure data integrity.
+       */
+      match /movements/{movementId} {
+        allow create, delete: if isSignedIn();
+        allow update: if false; // Deny updates to make logs immutable.
+      }
+    }
+    
+    /**
+     * @description This rule allows a collection group query on 'movements'.
+     * It's necessary for features like the "Recent Activity" feed on the dashboard,
+     * which needs to query across all 'movements' subcollections.
+     * It grants read-only access to any authenticated user.
+     */
+    match /{path=**}/movements/{movementId} {
+      allow read: if isSignedIn();
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}
