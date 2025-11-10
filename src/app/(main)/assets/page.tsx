@@ -13,8 +13,8 @@ import { AssetForm } from "./asset-form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDocs, query, where, limit } from "firebase/firestore";
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { collection, doc, getDocs, query, where, limit, setDoc } from "firebase/firestore";
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function AssetsPage() {
   const firestore = useFirestore();
@@ -49,22 +49,26 @@ export default function AssetsPage() {
     toast({ title: "Patrimônio removido", description: "O item foi removido com sucesso." });
   };
 
-  const generateNewAssetId = async (sectorId: string) => {
-    if (!firestore || !sectors) return null;
+  const generateNewAssetId = async (roomId: string) => {
+    if (!firestore || !sectors || !rooms) return null;
+    
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) {
+        toast({ variant: "destructive", title: "Erro de Sala", description: "A sala selecionada não foi encontrada." });
+        return null;
+    }
 
-    const sector = sectors.find(s => s.id === sectorId);
-    if (!sector || sector.abbreviation.length !== 3) {
+    const sector = sectors.find(s => s.id === room.sectorId);
+    if (!sector || !sector.abbreviation || sector.abbreviation.length !== 3) {
       toast({ variant: "destructive", title: "Erro de Setor", description: "O setor selecionado não possui uma sigla válida de 3 letras." });
       return null;
     }
     const prefix = sector.abbreviation.toUpperCase();
 
-    // Query to find the last asset with this prefix
     const assetsWithPrefixQuery = query(
       collection(firestore, "assets"),
       where("id", ">=", prefix),
-      where("id", "<", prefix + 'z'),
-      limit(1000) // Adjust limit as needed, but this is a safeguard
+      where("id", "<", prefix + 'z')
     );
 
     const querySnapshot = await getDocs(assetsWithPrefixQuery);
@@ -84,30 +88,42 @@ export default function AssetsPage() {
     return newId;
   }
 
-  const handleFormSubmit = async (values: Omit<Asset, 'id' | 'roomId'> & { roomId: string; status: AssetStatus; }) => {
-    if (!firestore || !sectors) return;
+  const handleFormSubmit = async (values: Omit<Asset, 'id'> & { roomId: string; status: AssetStatus; }) => {
+    if (!firestore) return;
 
     if (editingAsset) {
       updateDocumentNonBlocking(doc(firestore, "assets", editingAsset.id), {
-        ...values
+        name: values.name,
+        status: values.status,
       });
       toast({ title: "Patrimônio atualizado", description: "As informações do item foram salvas." });
     } else {
-      const newId = await generateNewAssetId(sectors.find(s => s.id === rooms?.find(r => r.id === values.roomId)?.sectorId)?.id || "");
+      const newId = await generateNewAssetId(values.roomId);
       if (!newId) {
         toast({ variant: "destructive", title: "Falha ao gerar ID", description: "Não foi possível gerar um novo ID para o patrimônio." });
         return;
       }
-      const newAsset = { id: newId, ...values };
-      // Note: addDocumentNonBlocking doesn't allow specifying an ID. We must use setDoc.
-      // Since we are setting a new document, we don't need to worry about the non-blocking error handling as much for permission errors on create.
-      await addDocumentNonBlocking(collection(firestore, "assets"), { name: values.name, roomId: values.roomId, status: values.status, id: newId });
+      
+      const newAsset: Asset = { id: newId, name: values.name, roomId: values.roomId, status: values.status };
+      
+      // Since addDocumentNonBlocking doesn't allow custom IDs, we use setDoc.
+      // The non-blocking error handling for this is managed by the helper.
+      await setDoc(doc(firestore, "assets", newId), {
+          name: newAsset.name,
+          roomId: newAsset.roomId,
+          status: newAsset.status
+      }).catch(error => {
+          // This could be more specific, but for now we catch generic errors too
+          console.error("Error setting document: ", error);
+          toast({ variant: "destructive", title: "Erro ao salvar", description: "Não foi possível adicionar o patrimônio." });
+      });
 
       toast({ title: "Patrimônio adicionado", description: `Um novo item (${newId}) foi criado com sucesso.` });
     }
     setIsFormOpen(false);
     setEditingAsset(undefined);
   };
+
 
   const getFullLocation = (roomId: string) => {
     const room = rooms?.find(r => r.id === roomId);
@@ -127,17 +143,17 @@ export default function AssetsPage() {
     );
   }, [assets, searchQuery, rooms, sectors, blocks]);
 
-  const getStatusVariant = (status: AssetStatus) => {
+  const getStatusVariant = (status: AssetStatus): "default" | "secondary" | "destructive" | "outline" | "warning" | "neutral" => {
     switch (status) {
       case "Em Uso":
         return "default";
       case "Guardado":
-        return "secondary";
+        return "warning";
       case "Perdido":
         return "destructive";
       case "Desconhecido":
       default:
-        return "outline";
+        return "neutral";
     }
   };
 

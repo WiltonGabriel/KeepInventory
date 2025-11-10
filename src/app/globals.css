@@ -20,6 +20,10 @@
     --accent-foreground: 206 100% 24%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --warning: 45 100% 51%; /* Amarelo */
+    --warning-foreground: 0 0% 20%;
+    --neutral: 220 9% 46%; /* Cinza */
+    --neutral-foreground: 0 0% 98%;
     --border: 210 17% 90%; /* #dee2e6 */
     --input: 210 17% 90%;
     --ring: 211 100% 50%;
@@ -43,6 +47,10 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+    --warning: 45 100% 51%;
+    --warning-foreground: 0 0% 10%;
+    --neutral: 220 10% 25%;
+    --neutral-foreground: 0 0% 98%;
     --border: 0 0% 27%; /* #444444 */
     --input: 0 0% 27%;
     --ring: 211 100% 60%;
