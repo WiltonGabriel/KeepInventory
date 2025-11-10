@@ -69,12 +69,14 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
             form.setValue('blockId', block.id);
             form.setValue('sectorId', sector.id);
             form.setValue('roomId', room.id);
-            form.setValue('name', defaultValues.name || '');
-            form.setValue('status', defaultValues.status || 'Em Uso');
           }
         }
       }
     }
+     // Repopula o nome e status caso não sejam preenchidos inicialmente
+    if (defaultValues?.name) form.setValue('name', defaultValues.name);
+    if (defaultValues?.status) form.setValue('status', defaultValues.status);
+
   }, [defaultValues, allRooms, allSectors, blocks, form.setValue]);
   
 
@@ -181,7 +183,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                     }} value={field.value} disabled={!watchedBlockId || availableSectors.length === 0}>
                         <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder={'Selecione um setor'} />
+                            <SelectValue placeholder={!watchedBlockId ? 'Selecione um bloco primeiro' : 'Selecione um setor'} />
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -206,7 +208,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                   <Select onValueChange={field.onChange} value={field.value} disabled={!watchedSectorId || availableRooms.length === 0}>
                       <FormControl>
                       <SelectTrigger>
-                          <SelectValue placeholder={'Selecione uma sala'} />
+                          <SelectValue placeholder={!watchedSectorId ? 'Selecione um setor primeiro' : 'Selecione uma sala'} />
                       </SelectTrigger>
                       </FormControl>
                       <SelectContent>
