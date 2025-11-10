@@ -24,6 +24,7 @@ O KeepInventory é um Sistema de Gestão Patrimonial (SGP) robusto e intuitivo, 
 
 | Nome              | Função          |
 | ----------------- | --------------- |
+| **João Lucas**    | Coordenador     |
 | **Wilton Gabriel**  | Desenvolvedor   |
 | **Adriel Felipe**   | Documentação    |
 | **Vinicius Miranda**| Documentação    |
