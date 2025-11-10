@@ -7,9 +7,6 @@ import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
-// This provider no longer manages user state, as authentication is mocked.
-// It is kept to provide Firebase App and Firestore instances to the rest of the app.
-
 export interface FirebaseContextState {
   areServicesAvailable: boolean; 
   firebaseApp: FirebaseApp | null;
@@ -114,8 +111,3 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
   
   return memoized;
 }
-
-// Dummy useUser hook for compatibility. Will be removed later if not needed.
-export const useUser = (): { user: null, isUserLoading: boolean, userError: null } => {
-  return { user: null, isUserLoading: false, userError: null };
-};
