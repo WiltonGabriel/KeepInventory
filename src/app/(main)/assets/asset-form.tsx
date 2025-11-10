@@ -24,7 +24,6 @@ import {
 import { Block, Sector, Room, Asset, assetStatusOptions } from "@/lib/types";
 import { useEffect, useMemo } from "react";
 
-// O schema para validação do formulário. Inclui os IDs de localização para controle.
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
   status: z.enum(assetStatusOptions, { required_error: "Selecione um status." }),
@@ -33,12 +32,10 @@ const formSchema = z.object({
   roomId: z.string({ required_error: "Selecione uma sala." }).min(1, { message: "Selecione uma sala." }),
 });
 
-// Tipagem inferida do schema Zod.
 type AssetFormValues = z.infer<typeof formSchema>;
 
 type AssetFormProps = {
-  // A função onSubmit recebe apenas os dados pertinentes à entidade Asset.
-  onSubmit: (values: Omit<AssetFormValues, 'blockId' | 'sectorId'>) => void;
+  onSubmit: (values: Pick<AssetFormValues, 'name' | 'status' | 'roomId'>) => void;
   defaultValues?: Partial<Asset>;
   blocks: Block[];
   allSectors: Sector[];
@@ -49,7 +46,6 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
   
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(formSchema),
-    // Define os valores padrão para o modo de criação.
     defaultValues: {
       name: "",
       status: "Em Uso",
@@ -59,17 +55,15 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
     },
   });
 
-  // Este useEffect é a chave para preencher o formulário no modo de edição.
   useEffect(() => {
-    // Só executa se estiver editando (defaultValues existe) e todos os dados de localização estiverem carregados.
+    // This effect runs ONLY in EDIT mode and only when ALL data is available.
     if (defaultValues?.id && allRooms.length > 0 && allSectors.length > 0 && blocks.length > 0) {
       
       const room = allRooms.find(r => r.id === defaultValues.roomId);
       if (room) {
         const sector = allSectors.find(s => s.id === room.sectorId);
-        // Apenas se a hierarquia completa (sala e setor) for encontrada, o formulário é preenchido.
+        // Only if the full hierarchy (room and sector) is found, the form is reset.
         if (sector) {
-          // form.reset() atualiza o estado interno completo do formulário, limpando erros de validação anteriores.
           form.reset({
             name: defaultValues.name || "",
             status: defaultValues.status || "Em Uso",
@@ -80,26 +74,22 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
         }
       }
     }
-  // A lista de dependências garante que o efeito seja reavaliado se qualquer um dos dados mudar.
+  // The dependency array ensures this effect is re-evaluated if any of the data changes.
   }, [defaultValues, allRooms, allSectors, blocks, form]);
   
-  // Observadores para os campos de seleção, para filtrar as opções dinamicamente.
   const watchedBlockId = form.watch("blockId");
   const watchedSectorId = form.watch("sectorId");
 
-  // Filtra os setores disponíveis com base no bloco selecionado.
   const availableSectors = useMemo(() => {
     if (!watchedBlockId) return [];
     return allSectors.filter(s => s.blockId === watchedBlockId);
   }, [watchedBlockId, allSectors]);
 
-  // Filtra as salas disponíveis com base no setor selecionado.
   const availableRooms = useMemo(() => {
     if (!watchedSectorId) return [];
     return allRooms.filter(r => r.sectorId === watchedSectorId);
   }, [watchedSectorId, allRooms]);
 
-  // Handler para o submit que remove os campos auxiliares (blockId, sectorId) antes de enviar.
   const handleFormSubmit = (values: AssetFormValues) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { blockId, sectorId, ...submissionValues } = values;
@@ -157,7 +147,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                     <FormLabel>Bloco</FormLabel>
                     <Select onValueChange={(value) => {
                         field.onChange(value);
-                        // Limpa os campos dependentes para forçar uma nova seleção.
+                        // When block changes, reset sector and room.
                         form.setValue('sectorId', '', { shouldValidate: true });
                         form.setValue('roomId', '', { shouldValidate: true });
                     }} value={field.value}>
@@ -187,7 +177,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
                     <FormLabel>Setor</FormLabel>
                     <Select onValueChange={(value) => {
                         field.onChange(value);
-                        // Limpa o campo dependente.
+                        // When sector changes, reset room.
                         form.setValue('roomId', '', { shouldValidate: true });
                     }} value={field.value} disabled={!watchedBlockId || availableSectors.length === 0}>
                         <FormControl>
