@@ -198,7 +198,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Log de Atividade Recente</CardTitle>
-                <CardDescription>As 10 últimas ações de criação ou remoção no inventário.</CardDescription>
+                <CardDescription>As 10 últimas ações no inventário.</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingLogs && <p className="text-sm text-muted-foreground">Carregando atividades...</p>}

@@ -147,15 +147,24 @@ export default function AssetsPage() {
   }
   
   const handleStatusChange = async (asset: Asset, newStatus: AssetStatus) => {
-    if (!firestore || asset.status === newStatus) return;
+    if (!firestore || !generalLogCollection || asset.status === newStatus) return;
 
     try {
         const batch = writeBatch(firestore);
         const assetRef = doc(firestore, "patrimonios", asset.id);
         
         batch.update(assetRef, { status: newStatus });
+
+        // Log para o histórico específico
         logSpecificMovement(batch, asset.id, asset.name, "Status Alterado", asset.status, newStatus);
         
+        // Log para o log geral
+        const generalLogRef = doc(generalLogCollection);
+        batch.set(generalLogRef, { 
+            acao: `Status de "${asset.name}" (${asset.id}) alterado de "${asset.status}" para "${newStatus}".`,
+            timestamp: serverTimestamp() 
+        });
+
         await batch.commit();
         toast({ title: "Status atualizado!", description: `O status de "${asset.name}" foi alterado para "${newStatus}".` });
     } catch (error) {
@@ -182,27 +191,36 @@ export default function AssetsPage() {
         if (editingAsset) { // Logic for UPDATE
             const assetRef = doc(firestore, "patrimonios", editingAsset.id);
             const updates: Partial<Asset> = {};
-            let changed = false;
 
             if (values.name !== editingAsset.name) {
                 updates.name = values.name;
                 logSpecificMovement(batch, editingAsset.id, values.name, "Nome Alterado", editingAsset.name, values.name);
-                changed = true;
+                // No general log for name change as per requirement
             }
             if (values.status !== editingAsset.status) {
                 updates.status = values.status;
                 logSpecificMovement(batch, editingAsset.id, values.name, "Status Alterado", editingAsset.status, values.status);
-                changed = true;
+                
+                const generalLogRef = doc(generalLogCollection);
+                batch.set(generalLogRef, { 
+                    acao: `Status de "${values.name}" (${editingAsset.id}) alterado para "${values.status}".`,
+                    timestamp: serverTimestamp() 
+                });
             }
             if (values.roomId !== editingAsset.roomId) {
                 updates.roomId = values.roomId;
                 const fromRoom = rooms.find(r => r.id === editingAsset.roomId)?.name || 'N/A';
                 const toRoom = rooms.find(r => r.id === values.roomId)?.name || 'N/A';
                 logSpecificMovement(batch, editingAsset.id, values.name, "Movido", fromRoom, toRoom);
-                changed = true;
+
+                const generalLogRef = doc(generalLogCollection);
+                batch.set(generalLogRef, { 
+                    acao: `Patrimônio "${values.name}" (${editingAsset.id}) movido para "${toRoom}".`,
+                    timestamp: serverTimestamp() 
+                });
             }
 
-            if (changed) {
+            if (Object.keys(updates).length > 0) {
                 batch.update(assetRef, updates);
                 await batch.commit();
                 toast({ title: "Patrimônio atualizado", description: "As informações do item foram salvas." });
