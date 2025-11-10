@@ -42,7 +42,7 @@ import {
   useFirestore,
   useMemoFirebase,
 } from '@/firebase';
-import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -83,7 +83,7 @@ export default function DashboardPage() {
     () =>
       firestore
         ? query(
-            collectionGroup(firestore, 'movimentacoes'),
+            collection(firestore, 'movimentacoes'),
             orderBy('timestamp', 'desc'),
             limit(10)
           )

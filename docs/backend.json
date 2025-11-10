@@ -126,7 +126,7 @@
         },
         "to": {
           "type": "string",
-          "description": "O estado ou localização após a alteração."
+          "description": "O estado ou localização após da alteração."
         }
       },
       "required": ["assetId", "assetName", "timestamp", "action", "from", "to"]
@@ -205,18 +205,14 @@
         }
       },
       {
-        "path": "/patrimonios/{patrimonioId}/movimentacoes/{movimentacaoId}",
+        "path": "/movimentacoes/{movimentacaoId}",
         "definition": {
           "entityName": "Movimentacao",
           "schema": {
             "$ref": "#/backend/entities/Movement"
           },
-          "description": "Armazena o histórico de movimentações e alterações de um patrimônio específico como uma subcoleção aninhada.",
+          "description": "Armazena o histórico de movimentações e alterações de todos os patrimônios. Cada documento é um log individual.",
           "params": [
-            {
-              "name": "patrimonioId",
-              "description": "O ID do patrimônio que está sendo rastreado."
-            },
             {
               "name": "movimentacaoId",
               "description": "Identificador único para a entrada de log de movimentação."
@@ -225,6 +221,6 @@
         }
       }
     ],
-    "reasoning": "A estrutura do Firestore foi refatorada para ser mais segura e eficiente. As 'movimentacoes' não são mais uma coleção de nível superior, mas agora uma subcoleção aninhada dentro de cada documento 'patrimonio'. Essa estrutura hierárquica (/patrimonios/{patrimonioId}/movimentacoes/{movimentacaoId}) simplifica as regras de segurança, pois o acesso ao histórico de um patrimônio está inerentemente ligado ao acesso ao próprio patrimônio. Isso elimina a necessidade de consultas globais complexas na coleção de movimentações, que estava causando erros de permissão. Todas as outras entidades (Blocos, Setores, Salas, Patrimonios) permanecem em suas próprias coleções de nível superior para simplicidade e escalabilidade."
+    "reasoning": "A estrutura do Firestore foi refatorada para ser mais simples e robusta, eliminando a consulta collectionGroup que causava erros de permissão. A coleção 'movimentacoes' foi movida para o nível superior. Isso simplifica as consultas de leitura tanto para o log de atividades global no dashboard (uma consulta simples na coleção principal) quanto para o histórico de um item específico (uma consulta com um 'where' em 'patrimonioId'). As regras de segurança também são simplificadas, pois agora podemos definir permissões diretas na coleção 'movimentacoes'."
   }
 }
