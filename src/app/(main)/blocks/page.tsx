@@ -73,12 +73,12 @@ export default function BlocksPage() {
     {
       accessorKey: "name",
       header: "Nome",
-      cell: (item: Block) => item.name,
+      cell: ({ row }: { row: { original: Block } }) => row.original.name,
     },
     {
       accessorKey: "actions",
       header: "Ações",
-      cell: (item: Block) => (
+      cell: ({ row }: { row: { original: Block } }) => (
         <div className="flex gap-2">
            <HardConfirmationDialog
             trigger={
@@ -88,8 +88,8 @@ export default function BlocksPage() {
             }
             title="Confirmar Edição"
             description="Para prosseguir com a edição, por favor, digite o nome do bloco:"
-            itemName={item.name}
-            onConfirm={() => openEditForm(item)}
+            itemName={row.original.name}
+            onConfirm={() => openEditForm(row.original)}
             confirmButtonText="Confirmar e Editar"
           />
 
@@ -101,8 +101,8 @@ export default function BlocksPage() {
             }
             title="Você tem certeza?"
             description="Esta ação não pode ser desfeita. Isso excluirá permanentemente o bloco e todos os setores, salas e patrimônios associados a ele. Para confirmar, digite:"
-            itemName={item.name}
-            onConfirm={() => handleDelete(item.id)}
+            itemName={row.original.name}
+            onConfirm={() => handleDelete(row.original.id)}
             confirmButtonText="Eu entendo as consequências, apagar este Bloco"
             variant="destructive"
           />

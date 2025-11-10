@@ -78,19 +78,19 @@ export default function RoomsPage() {
     {
       accessorKey: "name",
       header: "Nome",
-      cell: (item: Room) => item.name,
+      cell: ({ row }: { row: { original: Room } }) => row.original.name,
     },
     {
       accessorKey: "location",
       header: "Localização (Bloco / Setor)",
-      cell: (item: Room) => getFullLocation(item.sectorId),
+      cell: ({ row }: { row: { original: Room } }) => getFullLocation(row.original.sectorId),
     },
     {
       accessorKey: "actions",
       header: "Ações",
-      cell: (item: Room) => (
+      cell: ({ row }: { row: { original: Room } }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => handleEdit(item)}>
+          <Button variant="outline" size="icon" onClick={() => handleEdit(row.original)}>
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
@@ -108,7 +108,7 @@ export default function RoomsPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                <AlertDialogAction onClick={() => handleDelete(row.original.id)}>
                   Excluir
                 </AlertDialogAction>
               </AlertDialogFooter>

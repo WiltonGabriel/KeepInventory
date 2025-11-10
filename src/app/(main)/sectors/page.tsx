@@ -75,22 +75,22 @@ export default function SectorsPage() {
     {
       accessorKey: "name",
       header: "Nome",
-      cell: (item: Sector) => item.name,
+      cell: ({ row }: { row: { original: Sector } }) => row.original.name,
     },
     {
       accessorKey: "abbreviation",
       header: "Sigla",
-      cell: (item: Sector) => <Badge variant="secondary">{item.abbreviation}</Badge>,
+      cell: ({ row }: { row: { original: Sector } }) => <Badge variant="secondary">{row.original.abbreviation}</Badge>,
     },
     {
       accessorKey: "block",
       header: "Bloco",
-      cell: (item: Sector) => getBlockName(item.blockId),
+      cell: ({ row }: { row: { original: Sector } }) => getBlockName(row.original.blockId),
     },
     {
       accessorKey: "actions",
       header: "Ações",
-      cell: (item: Sector) => (
+      cell: ({ row }: { row: { original: Sector } }) => (
         <div className="flex gap-2">
           <HardConfirmationDialog
             trigger={
@@ -100,8 +100,8 @@ export default function SectorsPage() {
             }
             title="Confirmar Edição"
             description="Para prosseguir com a edição, por favor, digite o nome do setor:"
-            itemName={item.name}
-            onConfirm={() => openEditForm(item)}
+            itemName={row.original.name}
+            onConfirm={() => openEditForm(row.original)}
             confirmButtonText="Confirmar e Editar"
           />
 
@@ -113,8 +113,8 @@ export default function SectorsPage() {
             }
             title="Você tem certeza?"
             description="Esta ação não pode ser desfeita. Isso excluirá permanentemente o setor e todas as salas e patrimônios associados a ele. Para confirmar, digite:"
-            itemName={item.name}
-            onConfirm={() => handleDelete(item.id)}
+            itemName={row.original.name}
+            onConfirm={() => handleDelete(row.original.id)}
             confirmButtonText="Eu entendo as consequências, apagar este Setor"
             variant="destructive"
           />

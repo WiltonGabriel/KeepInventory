@@ -13,11 +13,16 @@ type DataItem = {
   [key: string]: any;
 };
 
+// This type uses generics to accept any kind of data structure for a row.
+// It is used by react-table to define the columns.
+// See: https://tanstack.com/table/v8/docs/api/core/column-def
 type ColumnDef<T> = {
   accessorKey: keyof T | 'actions';
   header: string;
-  cell: (item: T) => React.ReactNode;
+  // The cell function receives the row data and can render any JSX.
+  cell: (props: { row: { original: T } }) => React.ReactNode;
 };
+
 
 interface DataTableProps<T extends DataItem> {
   columns: ColumnDef<T>[];
@@ -42,7 +47,7 @@ export function DataTable<T extends DataItem>({ columns, data, emptyStateMessage
               data.map((item) => (
                 <TableRow key={item.id}>
                   {columns.map((column, index) => (
-                    <TableCell key={index}>{column.cell(item)}</TableCell>
+                    <TableCell key={index}>{column.cell({ row: { original: item }})}</TableCell>
                   ))}
                 </TableRow>
               ))

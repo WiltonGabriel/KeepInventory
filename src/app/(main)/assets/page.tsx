@@ -103,31 +103,31 @@ export default function AssetsPage() {
     {
       accessorKey: "id",
       header: "ID",
-      cell: (item: Asset) => <span className="font-mono text-xs">{item.id}</span>,
+      cell: ({ row }: { row: { original: Asset } }) => <span className="font-mono text-xs">{row.original.id}</span>,
     },
     {
       accessorKey: "name",
       header: "Nome",
-      cell: (item: Asset) => item.name,
+      cell: ({ row }: { row: { original: Asset } }) => row.original.name,
     },
      {
       accessorKey: "status",
       header: "Status",
-      cell: (item: Asset) => (
-        <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+      cell: ({ row }: { row: { original: Asset } }) => (
+        <Badge variant={getStatusVariant(row.original.status)}>{row.original.status}</Badge>
       ),
     },
     {
       accessorKey: "location",
       header: "Localização",
-      cell: (item: Asset) => getFullLocation(item.roomId),
+      cell: ({ row }: { row: { original: Asset } }) => getFullLocation(row.original.roomId),
     },
     {
       accessorKey: "actions",
       header: "Ações",
-      cell: (item: Asset) => (
+      cell: ({ row }: { row: { original: Asset } }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => handleEdit(item)}>
+          <Button variant="outline" size="icon" onClick={() => handleEdit(row.original)}>
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
@@ -145,7 +145,7 @@ export default function AssetsPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                <AlertDialogAction onClick={() => handleDelete(row.original.id)}>
                   Excluir
                 </AlertDialogAction>
               </AlertDialogFooter>
