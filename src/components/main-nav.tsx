@@ -22,7 +22,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Início", icon: LayoutDashboard },
   { href: "/assets", label: "Patrimônios", icon: Archive },
-  { href: "/move-assets", label: "Movimentar", icon: ArrowRightLeft },
+  { href: "/move-assets", label: "Movimentação", icon: ArrowRightLeft },
   { href: "/rooms", label: "Salas", icon: DoorOpen },
   { href: "/sectors", label: "Setores", icon: Building2 },
   { href: "/blocks", label: "Blocos", icon: Building },
