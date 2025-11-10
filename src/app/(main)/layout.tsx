@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -14,9 +14,8 @@ import {
 import { Building } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { MainNav } from "@/components/main-nav";
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser } from "@/firebase";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
-import { collection, query, where, getDocs, addDoc, limit } from "firebase/firestore";
 
 function MainLayoutContent({
   children,
@@ -25,51 +24,20 @@ function MainLayoutContent({
 }) {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
 
   useEffect(() => {
-    if (isUserLoading) return;
-
+    // If the user state is still loading, do nothing.
+    if (isUserLoading) {
+      return;
+    }
+    // Once loading is complete, if there is no user, redirect to login.
     if (!user) {
       router.replace("/login");
-    } else if (firestore) {
-      // Seed initial data if it doesn't exist
-      const seedData = async () => {
-        try {
-          // Check for Block A
-          const blocksRef = collection(firestore, 'blocos');
-          const blockQuery = query(blocksRef, where('name', '==', 'Bloco A'), limit(1));
-          const blockSnapshot = await getDocs(blockQuery);
-          let blockId: string;
-
-          if (blockSnapshot.empty) {
-            const blockDoc = await addDoc(blocksRef, { name: 'Bloco A' });
-            blockId = blockDoc.id;
-          } else {
-            blockId = blockSnapshot.docs[0].id;
-          }
-
-          // Check for TI Sector
-          const sectorsRef = collection(firestore, 'setores');
-          const sectorQuery = query(sectorsRef, where('name', '==', 'Tecnologia da Informação'), limit(1));
-          const sectorSnapshot = await getDocs(sectorQuery);
-
-          if (sectorSnapshot.empty) {
-            await addDoc(sectorsRef, {
-              name: 'Tecnologia da Informação',
-              abbreviation: 'TIN',
-              blockId: blockId,
-            });
-          }
-        } catch (error) {
-          console.error("Error seeding initial data:", error);
-        }
-      };
-      seedData();
     }
-  }, [isUserLoading, user, router, firestore]);
+  }, [isUserLoading, user, router]);
 
-
+  // While loading or if there's no user, show a loading screen.
+  // This prevents content from flashing before the redirect.
   if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -91,7 +59,8 @@ function MainLayoutContent({
       </div>
     );
   }
-
+  
+  // If user is loaded and present, render the main application layout.
   return (
     <SidebarProvider>
       <Sidebar>

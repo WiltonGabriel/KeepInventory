@@ -21,6 +21,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   Auth,
+  onAuthStateChanged,
 } from "firebase/auth";
 
 
@@ -31,50 +32,59 @@ function LoginPageContent() {
   const [email, setEmail] = useState("admin@univag.com.br");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    // We get the auth instance from the initialized firebase app.
     const { auth: firebaseAuth } = initializeFirebase();
     setAuth(firebaseAuth);
-  }, []);
 
-  useEffect(() => {
-    // If the user is loaded and exists, redirect to the dashboard.
-    if (!isUserLoading && user) {
-      router.replace("/dashboard");
-    }
-  }, [user, isUserLoading, router]);
+    // If a user is already authenticated when the page loads, redirect them away.
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+      if (user) {
+        router.replace("/dashboard");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
 
   const handleLogin = async () => {
     if (!auth) return;
     setError(null);
+    setIsLoading(true);
+
     if (!email || !password) {
       setError("Por favor, preencha o e-mail e a senha corretamente.");
+      setIsLoading(false);
       return;
     }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The useEffect above will handle the redirection.
+      // The onAuthStateChanged listener will handle the redirection.
     } catch (e: any) {
-      // If user is not found, try to create a new user.
       if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, email, password);
-           // The useEffect above will handle the redirection.
+           // The onAuthStateChanged listener will handle the redirection.
         } catch (creationError: any) {
           setError(creationError.message);
         }
       } else {
         setError(e.message);
       }
+    } finally {
+      // Don't set loading to false immediately, to allow time for redirect
+      // It will be set to false if an error occurs.
+      if (error) {
+        setIsLoading(false);
+      }
     }
   };
 
-  // While loading or if user is already logged in, show a loader.
-  // The redirection will happen in the useEffect.
   if (isUserLoading || user) {
-    return (
+     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="loader"></div>
         <style jsx>{`
@@ -94,7 +104,6 @@ function LoginPageContent() {
       </div>
     );
   }
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -127,6 +136,7 @@ function LoginPageContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              disabled={isLoading}
             />
           </div>
           <div className="grid gap-2">
@@ -138,12 +148,13 @@ function LoginPageContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+               disabled={isLoading}
             />
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full" onClick={handleLogin}>
-            Entrar
+          <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </Button>
         </CardFooter>
       </Card>
