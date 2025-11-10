@@ -35,4 +35,4 @@ O KeepInventory é um Sistema de Gestão Patrimonial (SGP) robusto e intuitivo, 
 ## 📂 Repositório no GitHub
 
 O código-fonte do projeto está disponível no seguinte repositório:
-[https://github.com/WiltonGabriel/KeepInventory.git](https://github.com/WiltonGabriel/KeepInventory.git)
+[https://github.com/WiltonGabriel/KeepInventory](https://github.com/WiltonGabriel/KeepInventory)
