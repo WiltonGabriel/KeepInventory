@@ -75,7 +75,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl">KeepInventory</CardTitle>
           <CardDescription>
-            KeepInventory - Sistema de Gestão Patrimonial (SGP)
+            Sistema de Gestão Patrimonial (SGP)
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
