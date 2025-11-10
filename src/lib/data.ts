@@ -144,13 +144,21 @@ export const inventoryService = {
   },
   
   // --- Generic Mutators ---
-  add: (entityType: EntityType, item: Omit<Entity, 'id'>): Entity => {
+  add: (entityType: EntityType, item: Omit<Entity, 'id'>): Entity | undefined => {
     const items = getFromStorage<Entity>(KEYS[entityType.toUpperCase() as keyof typeof KEYS]);
     let newItem: Entity;
     if (entityType === 'assets') {
       const assetData = item as Omit<Asset, 'id'>;
       const room = inventoryService.getById('rooms', assetData.roomId) as Room;
+      if (!room) {
+        console.error(`Error: Room with id "${assetData.roomId}" not found when adding asset.`);
+        return undefined;
+      }
       const sector = inventoryService.getById('sectors', room.sectorId) as Sector;
+       if (!sector) {
+        console.error(`Error: Sector with id "${room.sectorId}" not found when adding asset.`);
+        return undefined;
+      }
       const assetsInRoom = inventoryService.getAssetsByRoomId(room.id);
       const newAssetNumber = (assetsInRoom.length + 1).toString().padStart(3, '0');
       const newId = `PAT${sector.abbreviation}${room.name.replace(/\D/g, '')}${newAssetNumber}`;
@@ -216,3 +224,5 @@ export const inventoryService = {
      }
   }
 };
+
+    
