@@ -11,15 +11,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Archive, Building, DoorOpen, Building2, BarChart3, History, CheckCircle } from "lucide-react";
+import { Archive, Building, DoorOpen, Building2, BarChart3, History, CheckCircle, AlertTriangle } from "lucide-react";
 import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 
 type Stats = {
   assetCount: number;
   activeAssetCount: number;
-  roomCount: number;
-  sectorCount: number;
+  lostAssetCount: number;
 };
 
 export default function DashboardPage() {
@@ -40,10 +39,9 @@ export default function DashboardPage() {
   const stats: Stats = useMemo(() => {
     const assetCount = assets?.length || 0;
     const activeAssetCount = assets?.filter(a => a.status === 'Em Uso').length || 0;
-    const roomCount = rooms?.length || 0;
-    const sectorCount = sectors?.length || 0;
-    return { assetCount, activeAssetCount, roomCount, sectorCount };
-    }, [assets, rooms, sectors]);
+    const lostAssetCount = assets?.filter(a => a.status === 'Perdido').length || 0;
+    return { assetCount, activeAssetCount, lostAssetCount };
+    }, [assets]);
 
 
   const getSectorsForBlock = (blockId: string) => {
@@ -93,12 +91,12 @@ export default function DashboardPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Setores</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Itens Perdidos</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
-                <div className="text-2xl font-bold">{stats.sectorCount}</div>
-                <p className="text-xs text-muted-foreground">Setores mapeados na instituição</p>
+                <div className="text-2xl font-bold">{stats.lostAssetCount}</div>
+                <p className="text-xs text-muted-foreground">Itens com status "Perdido"</p>
                 </CardContent>
             </Card>
           </div>
