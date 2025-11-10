@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Asset, Room, Sector, Block, AssetStatus } from "@/lib/types";
+import { Asset, Room, Sector, Block, AssetStatus, assetStatusOptions } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { collection, doc, getDocs, query, where, serverTimestamp, writeBatch, Wr
 import { HistoryLog } from "./history-log";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function AssetsPage() {
   const firestore = useFirestore();
@@ -55,24 +56,15 @@ export default function AssetsPage() {
 
     try {
         const batch = writeBatch(firestore);
-
-        // Reference to the asset itself
         const assetRef = doc(firestore, "assets", id);
-
-        // Reference to the nested 'movements' subcollection
         const movementsRef = collection(firestore, "assets", id, "movements");
-
-        // Get all movement documents to delete them
         const movementsSnapshot = await getDocs(movementsRef);
         movementsSnapshot.forEach(movementDoc => {
             batch.delete(movementDoc.ref);
         });
 
-        // Delete the main asset
         batch.delete(assetRef);
-
         await batch.commit();
-
         toast({ title: "Patrimônio removido", description: "O item e seu histórico foram removidos com sucesso." });
     } catch (error) {
         const contextualError = new FirestorePermissionError({
@@ -132,7 +124,7 @@ export default function AssetsPage() {
       if (!firestore) return;
       const movementRef = doc(collection(firestore, 'assets', assetId, 'movements'));
       batch.set(movementRef, {
-          assetId, // Keep assetId for potential denormalized queries later
+          assetId,
           assetName,
           action,
           from,
@@ -140,6 +132,33 @@ export default function AssetsPage() {
           timestamp: serverTimestamp(),
       });
   }
+
+  const handleStatusChange = async (asset: Asset, newStatus: AssetStatus) => {
+    if (!firestore || asset.status === newStatus) return;
+
+    try {
+        const batch = writeBatch(firestore);
+        const assetRef = doc(firestore, "assets", asset.id);
+        
+        batch.update(assetRef, { status: newStatus });
+        logMovement(batch, asset.id, asset.name, "Status Alterado", asset.status, newStatus);
+        
+        await batch.commit();
+        toast({ title: "Status atualizado!", description: `O status de "${asset.name}" foi alterado para "${newStatus}".` });
+    } catch (error) {
+        const contextualError = new FirestorePermissionError({
+            operation: 'update',
+            path: `assets/${asset.id}`,
+            requestResourceData: { status: newStatus },
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({
+            variant: "destructive",
+            title: "Erro ao atualizar status",
+            description: "Não foi possível alterar o status do patrimônio.",
+        });
+    }
+  };
 
   const handleFormSubmit = async (values: Pick<Asset, 'name' | 'status' | 'roomId'>) => {
     if (!firestore || !rooms) return;
@@ -264,9 +283,29 @@ export default function AssetsPage() {
      {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }: { row: { original: Asset } }) => (
-        <Badge variant={getStatusVariant(row.original.status)}>{row.original.status}</Badge>
-      ),
+      cell: ({ row }: { row: { original: Asset } }) => {
+        const asset = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Badge variant={getStatusVariant(asset.status)} className="cursor-pointer">
+                    {asset.status}
+                </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {assetStatusOptions.map(statusOption => (
+                <DropdownMenuItem 
+                  key={statusOption} 
+                  onSelect={() => handleStatusChange(asset, statusOption)}
+                  disabled={asset.status === statusOption}
+                  >
+                  {statusOption}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
     {
       accessorKey: "location",
@@ -347,3 +386,5 @@ export default function AssetsPage() {
     </div>
   );
 }
+
+    
