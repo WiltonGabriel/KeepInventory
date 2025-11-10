@@ -67,7 +67,7 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarFooter>
             <div className="flex items-center gap-2 p-2">
-              <Avatar>
+              <Avatar className="border-2 border-primary/50">
                  <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col truncate">
