@@ -1,4 +1,6 @@
 
+'use client';
+
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,18 +22,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Block, Sector, Room, Asset, assetStatusOptions } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
+// Adicionamos blockId e sectorId ao schema para controle interno do formulário
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
-  roomId: z.string({ required_error: "Selecione uma sala." }).min(1, { message: "Selecione uma sala." }),
   status: z.enum(assetStatusOptions, { required_error: "Selecione um status." }),
+  blockId: z.string({ required_error: "Selecione um bloco." }).min(1, {message: "Selecione um bloco."}),
+  sectorId: z.string({ required_error: "Selecione um setor." }).min(1, {message: "Selecione um setor."}),
+  roomId: z.string({ required_error: "Selecione uma sala." }).min(1, { message: "Selecione uma sala." }),
 });
 
 type AssetFormValues = z.infer<typeof formSchema>;
 
 type AssetFormProps = {
-  onSubmit: (values: AssetFormValues) => void;
+  onSubmit: (values: Omit<AssetFormValues, 'blockId' | 'sectorId'>) => void;
   defaultValues?: Partial<Asset>;
   blocks: Block[];
   allSectors: Sector[];
@@ -39,72 +44,62 @@ type AssetFormProps = {
 };
 
 export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRooms }: AssetFormProps) {
-  const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
-  const [selectedSector, setSelectedSector] = useState<string | null>(null);
-
-  const [availableSectors, setAvailableSectors] = useState<Sector[]>([]);
-  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultValues?.name || "",
-      roomId: defaultValues?.roomId || "",
       status: defaultValues?.status || "Em Uso",
+      roomId: defaultValues?.roomId || "",
+      sectorId: "", // Será preenchido pelo useEffect
+      blockId: "", // Será preenchido pelo useEffect
     },
   });
 
-  // Effect to populate location fields and available options when the component mounts or dependencies change
+  // Efeito para popular os campos de localização no modo de edição
   useEffect(() => {
-    if (defaultValues?.roomId && allRooms.length > 0 && allSectors.length > 0) {
+    if (defaultValues?.roomId && allRooms.length && allSectors.length && blocks.length) {
       const room = allRooms.find(r => r.id === defaultValues.roomId);
       if (room) {
         const sector = allSectors.find(s => s.id === room.sectorId);
         if (sector) {
-          const blockId = sector.blockId;
-          const sectorId = sector.id;
-
-          setSelectedBlock(blockId);
-          setAvailableSectors(allSectors.filter(s => s.blockId === blockId));
-          
-          setSelectedSector(sectorId);
-          setAvailableRooms(allRooms.filter(r => r.sectorId === sectorId));
-          
-          // Set form values
-          form.setValue('roomId', room.id);
-          form.setValue('name', defaultValues.name || '');
-          form.setValue('status', defaultValues.status || 'Em Uso');
+          const block = blocks.find(b => b.id === sector.blockId);
+          if (block) {
+            // Seta os valores no formulário para preencher os selects
+            form.setValue('blockId', block.id);
+            form.setValue('sectorId', sector.id);
+            form.setValue('roomId', room.id);
+            form.setValue('name', defaultValues.name || '');
+            form.setValue('status', defaultValues.status || 'Em Uso');
+          }
         }
       }
-    } else {
-        // Reset fields when there are no default values (create mode)
-        setSelectedBlock(null);
-        setSelectedSector(null);
-        setAvailableSectors([]);
-        setAvailableRooms([]);
     }
-  }, [defaultValues, allRooms, allSectors, blocks, form]);
+  }, [defaultValues, allRooms, allSectors, blocks, form.setValue]);
+  
 
-  const handleBlockChange = (blockId: string) => {
-    setSelectedBlock(blockId);
-    setAvailableSectors(allSectors.filter(s => s.blockId === blockId));
-    // Reset subsequent fields
-    setSelectedSector(null);
-    setAvailableRooms([]);
-    form.setValue('roomId', '');
-  }
+  const watchedBlockId = form.watch("blockId");
+  const watchedSectorId = form.watch("sectorId");
 
-  const handleSectorChange = (sectorId: string) => {
-    setSelectedSector(sectorId);
-    setAvailableRooms(allRooms.filter(r => r.sectorId === sectorId));
-     // Reset subsequent field
-    form.setValue('roomId', '');
-  }
+  const availableSectors = useMemo(() => {
+    if (!watchedBlockId) return [];
+    return allSectors.filter(s => s.blockId === watchedBlockId);
+  }, [watchedBlockId, allSectors]);
 
+  const availableRooms = useMemo(() => {
+    if (!watchedSectorId) return [];
+    return allRooms.filter(r => r.sectorId === watchedSectorId);
+  }, [watchedSectorId, allRooms]);
+
+  // Handler para o submit que remove campos auxiliares
+  const handleFormSubmit = (values: AssetFormValues) => {
+    const { blockId, sectorId, ...submissionValues } = values;
+    onSubmit(submissionValues);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -125,7 +120,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um status" />
@@ -145,65 +140,86 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
         />
 
         <div className="space-y-4">
-             <FormItem>
-              <FormLabel>Bloco</FormLabel>
-              <Select onValueChange={handleBlockChange} value={selectedBlock ?? ""}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={'Selecione um bloco'} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {blocks.map((block) => (
-                    <SelectItem key={block.id} value={block.id}>
-                      {block.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel>Setor</FormLabel>
-              <Select onValueChange={handleSectorChange} value={selectedSector ?? ""} disabled={!selectedBlock}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={'Selecione um setor'} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableSectors.map((sector) => (
-                    <SelectItem key={sector.id} value={sector.id}>
-                      {sector.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
+             <FormField
+              control={form.control}
+              name="blockId"
+              render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Bloco</FormLabel>
+                    <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('sectorId', '');
+                        form.setValue('roomId', '');
+                    }} value={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder={'Selecione um bloco'} />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        {blocks.map((block) => (
+                            <SelectItem key={block.id} value={block.id}>
+                            {block.name}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+              )}
+             />
+            
+            <FormField
+              control={form.control}
+              name="sectorId"
+              render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Setor</FormLabel>
+                    <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('roomId', '');
+                    }} value={field.value} disabled={!watchedBlockId || availableSectors.length === 0}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder={'Selecione um setor'} />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        {availableSectors.map((sector) => (
+                            <SelectItem key={sector.id} value={sector.id}>
+                            {sector.name}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
-            control={form.control}
-            name="roomId"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Sala</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedSector}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder={'Selecione uma sala'} />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    {availableRooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id}>
-                        {room.name}
-                        </SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
+              control={form.control}
+              name="roomId"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Sala</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!watchedSectorId || availableRooms.length === 0}>
+                      <FormControl>
+                      <SelectTrigger>
+                          <SelectValue placeholder={'Selecione uma sala'} />
+                      </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                      {availableRooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id}>
+                          {room.name}
+                          </SelectItem>
+                      ))}
+                      </SelectContent>
+                  </Select>
+                  <FormMessage />
+                  </FormItem>
+              )}
             />
         </div>
 

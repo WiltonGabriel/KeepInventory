@@ -13,7 +13,7 @@ import { AssetForm } from "./asset-form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDocs, query, where, setDoc, serverTimestamp, addDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, where, setDoc, serverTimestamp, addDoc, writeBatch } from "firebase/firestore";
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { HistoryLog } from "./history-log";
 
@@ -51,11 +51,29 @@ export default function AssetsPage() {
     setHistoryAsset(asset);
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "assets", id));
-    toast({ title: "Patrimônio removido", description: "O item foi removido com sucesso." });
-  };
+
+    // Inicia um batch para garantir a atomicidade da exclusão do patrimônio e seu histórico
+    const batch = writeBatch(firestore);
+
+    // Adiciona a exclusão do patrimônio ao batch
+    const assetRef = doc(firestore, "assets", id);
+    batch.delete(assetRef);
+
+    // Consulta e adiciona a exclusão dos movimentos associados ao batch
+    const movementsQuery = query(collection(firestore, "movements"), where("assetId", "==", id));
+    const movementsSnapshot = await getDocs(movementsQuery);
+    movementsSnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+
+    // Commita o batch
+    await batch.commit();
+
+    toast({ title: "Patrimônio removido", description: "O item e seu histórico foram removidos com sucesso." });
+};
+
 
   const generateNewAssetId = async (roomId: string) => {
     if (!firestore || !sectors || !rooms) return null;
@@ -171,11 +189,12 @@ export default function AssetsPage() {
 
 
   const getFullLocation = (roomId: string) => {
-    const room = rooms?.find(r => r.id === roomId);
+    if (!rooms || !sectors || !blocks) return 'Carregando...';
+    const room = rooms.find(r => r.id === roomId);
     if (!room) return 'N/A';
-    const sector = sectors?.find(s => s.id === room.sectorId);
+    const sector = sectors.find(s => s.id === room.sectorId);
     if (!sector) return room.name;
-    const block = blocks?.find(b => b.id === sector.blockId);
+    const block = blocks.find(b => b.id === sector.blockId);
     return `${block?.name || 'N/A'} / ${sector.name} / ${room.name}`;
   };
 
@@ -252,7 +271,7 @@ export default function AssetsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Esta ação não pode ser desfeita. Isso excluirá permanentemente o item de patrimônio.
+                  Esta ação não pode ser desfeita. Isso excluirá permanentemente o item de patrimônio e todo o seu histórico de movimentações.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
