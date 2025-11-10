@@ -53,7 +53,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
       status: defaultValues?.status || "Em Uso",
       blockId: "",
       sectorId: "",
-      roomId: "",
+      roomId: defaultValues?.roomId || "",
     },
   });
 
@@ -94,6 +94,7 @@ export function AssetForm({ onSubmit, defaultValues, blocks, allSectors, allRoom
 
   // Handler para o submit que remove campos auxiliares
   const handleFormSubmit = (values: AssetFormValues) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { blockId, sectorId, ...submissionValues } = values;
     onSubmit(submissionValues);
   };
