@@ -26,7 +26,7 @@ interface HistoryLogProps {
 export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
   const firestore = useFirestore();
 
-  // Query the nested subcollection
+  // Query the nested subcollection for the specific asset
   const movementsQuery = useMemoFirebase(
     () =>
       firestore && asset
@@ -117,3 +117,5 @@ export function HistoryLog({ asset, open, onOpenChange }: HistoryLogProps) {
     </Dialog>
   );
 }
+
+    
