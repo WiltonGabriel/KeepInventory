@@ -107,48 +107,61 @@ export default function AssetsPage() {
     }
   };
 
-  const generateNewAssetId = async (roomId: string) => {
+ const generateNewAssetId = async (roomId: string): Promise<string | null> => {
     if (!firestore || !sectors || !rooms) return null;
 
+    // 1. Encontrar o setor e sua sigla
     const room = rooms.find((r) => r.id === roomId);
     if (!room) {
-      toast({ variant: 'destructive', title: 'Erro de Sala', description: 'A sala selecionada não foi encontrada.' });
-      return null;
+        toast({ variant: 'destructive', title: 'Erro de Sala', description: 'A sala selecionada não foi encontrada.' });
+        return null;
     }
 
     const sector = sectors.find((s) => s.id === room.sectorId);
     if (!sector || !sector.abbreviation || sector.abbreviation.length !== 3) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de Setor',
-        description: 'O setor selecionado não possui uma sigla válida de 3 letras.',
-      });
-      return null;
+        toast({
+            variant: 'destructive',
+            title: 'Erro de Setor',
+            description: 'O setor selecionado não possui uma sigla válida de 3 letras.',
+        });
+        return null;
     }
-    const prefix = sector.abbreviation.toUpperCase();
+    const sectorPrefix = sector.abbreviation.toUpperCase();
 
+    // 2. Obter o ano atual
+    const currentYear = new Date().getFullYear().toString().slice(-2); // "25" para 2025
+
+    // 3. Montar o prefixo de busca (PRE+ANO)
+    const searchPrefix = `${sectorPrefix}${currentYear}`; // Ex: "TIN25"
+
+    // 4. Consultar o Firestore pelo maior ID existente com esse prefixo
     const assetsWithPrefixQuery = query(
       collection(firestore, 'patrimonios'),
-      where('id', '>=', prefix),
-      where('id', '<', prefix + 'z')
+      where('id', '>=', searchPrefix),
+      where('id', '<', searchPrefix + 'z') // 'z' é maior que qualquer número
     );
 
     const querySnapshot = await getDocs(assetsWithPrefixQuery);
-    let maxNumber = 0;
+    let maxSequential = 0;
     querySnapshot.forEach((doc) => {
       const docId = doc.id;
-      if (docId.startsWith(prefix)) {
-        const numberPart = parseInt(docId.substring(prefix.length), 10);
-        if (!isNaN(numberPart) && numberPart > maxNumber) {
-          maxNumber = numberPart;
+      if (docId.startsWith(searchPrefix)) {
+        // Extrai a parte sequencial (os últimos 4 dígitos)
+        const sequentialPart = parseInt(docId.substring(searchPrefix.length), 10);
+        if (!isNaN(sequentialPart) && sequentialPart > maxSequential) {
+          maxSequential = sequentialPart;
         }
       }
     });
 
-    const newNumber = maxNumber + 1;
-    const newId = `${prefix}${newNumber.toString().padStart(3, '0')}`;
+    // 5. Calcular e formatar o novo sequencial
+    const newSequential = maxSequential + 1;
+    const formattedSequential = newSequential.toString().padStart(4, '0'); // Garante 4 dígitos, ex: "0001"
+
+    // 6. Gerar o novo ID completo
+    const newId = `${searchPrefix}${formattedSequential}`;
     return newId;
-  };
+};
 
   const logSpecificMovement = (
     batch: WriteBatch,
@@ -253,7 +266,7 @@ export default function AssetsPage() {
         // Logic for CREATE
         const newId = await generateNewAssetId(values.roomId);
         if (!newId) {
-          toast({ variant: 'destructive', title: 'Falha ao gerar ID', description: 'Não foi possível gerar um novo ID para o patrimônio.' });
+          // O toast de erro já é mostrado dentro da função generateNewAssetId
           return;
         }
 
@@ -450,3 +463,5 @@ export default function AssetsPage() {
     </div>
   );
 }
+
+    
